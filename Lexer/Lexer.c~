@@ -1,0 +1,134 @@
+#pragma once
+#include "Token.h"
+#include "Lexer.h"
+#include "FunctionLex.h"
+
+using namespace std;
+
+//СharacterReadMode = 0; Флаг, сигнализирующий о том, что идет обычное считывание
+//СharacterReadMode = 2; Флаг, сигнализирующий о том, что идет считывание значение из двойных ковычек
+
+void Lexer::СharacterReadModeTwo(string const &Line, int LineNumber, vector<unique_ptr<Token» &VectorToken, int &IdentifierString, int Size)
+{
+unique_ptr<Token> ob(new Token());
+unique_ptr<Token> doubleduote(new Token());
+int SizeSubLine = 0;
+int TemporaryIdentifierString = IdentifierString;
+while (Line.at(TemporaryIdentifierString) != '"' && TemporaryIdentifierString < Size)
+{
+TemporaryIdentifierString++;
+SizeSubLine++;
+}
+
+if (Line.at(TemporaryIdentifierString) == '"')
+{
+doubleduote->SetTypeToken(Token::Words::DoubleQuote);
+ob->SetTypeToken(Token::Words::String);
+doubleduote->SetStrNumber(LineNumber);
+doubleduote->SetColNumber(IdentifierString + 2);
+doubleduote->SetString(Line.substr(TemporaryIdentifierString, 1));
+//cout « "Loc<" « LineNumber « ":" « (TemporaryIdentifierString + 1) « "> " « doubleduote->GetTypeToken() « " '" « doubleduote->GetString() « "'" « endl;
+}
+else
+{
+ob->SetTypeToken(Token::Words::Unexpected);
+}
+
+ob->SetString(Line.substr(IdentifierString, SizeSubLine));
+ob->SetStrNumber(LineNumber);
+ob->SetColNumber(IdentifierString + 1);
+//cout « "Loc<" « LineNumber « ":" « (IdentifierString + 1) « "> " « ob->GetTypeToken() « " '" « ob->GetString() « "'" « endl;
+IdentifierString = TemporaryIdentifierString;
+СharacterReadMode = 0;
+if (ob != nullptr)
+VectorToken.push_back(move(ob));
+}
+void Lexer::UnexpectedToken(string const &Line, int LineNumber, vector<unique_ptr<Token» &VectorToken, int &IdentifierString, int Size)
+{
+unique_ptr<Token> ob(new Token());
+int SizeSubLine = 1;
+int TemporaryIdentifierString = IdentifierString;
+while (TemporaryIdentifierString < Size - 1 && !isspace(Line.at(IdentifierString)))
+{
+TemporaryIdentifierString++;
+SizeSubLine++;
+}
+
+ob->SetTypeToken(Token::Words::Unexpected);
+ob->SetStrNumber(LineNumber);
+ob->SetColNumber(IdentifierString + 1);
+ob->SetString(Line.substr(IdentifierString, SizeSubLine));
+if (ob != nullptr)
+{
+VectorToken.push_back(move(ob));
+cout « TemporaryIdentifierString « "/" « SizeSubLine « endl;
+//cout « "Loc<" « LineNumber « ":" « (IdentifierString + 1) « "> " « ob->GetTypeToken() « " '" « ob->GetString() « "'" « endl;
+}
+IdentifierString = TemporaryIdentifierString;
+}
+
+
+void Lexer::GetNextToken(string Line, int LineNumber, int EndFileId, vector<unique_ptr<Token» &VectorToken)
+{
+
+int IdentifierString = 0;
+int Size = (int)Line.size();
+СharacterReadMode = 0; // Флаг, сигнализирующий о том, что идет считывание из ковычек
+
+if (EndFileId)
+{ // Проверка на конец файла
+unique_ptr<Token> ob(new Token());
+ob->SetTypeToken(Token::Words::End);
+ob->SetString("\0");
+ob->SetStrNumber(LineNumber);
+ob->SetColNumber(1);
+//cout « "Loc<" « LineNumber « ":" « 1 « "> " « ob->GetTypeToken() « " '" « ob->GetString() « "'" « endl;
+VectorToken.push_back(std::move(ob));
+}
+else
+{
+//cout « "line size = " « Line.size() « endl;
+while (IdentifierString < Size)
+{
+while (СharacterReadMode != 2 && isspace(Line.at(IdentifierString)))
+{ // Пропускаем все пробелы
+IdentifierString++;
+}
+
+if (СharacterReadMode == 2)
+{ // Считываем строку пока не встретим знак " или строка не закончится
+СharacterReadModeTwo(Line, LineNumber, VectorToken, IdentifierString, Size);
+}
+else if (strchr("+-/*%&|=()[]{}<>;,.", Line.at(IdentifierString))) { // Считывание операторов
+//cout « "i = " « IdentifierString « endl;
+auto ob = WordZnak(Line, LineNumber, Size, IdentifierString);
+if (ob != nullptr)
+VectorToken.push_back(move(ob));
+}
+else if (Size - 1 == IdentifierString);
+else if (isletter(Line.at(IdentifierString))) { // Считывание ключевых слов
+auto ob = WordString(Line, LineNumber, Size, IdentifierString);
+if (ob != nullptr)
+VectorToken.push_back(move(ob));
+}
+else if (isdigit(Line.at(IdentifierString))) { // Считывание чисел
+auto ob = WordDigit(Line, LineNumber, IdentifierString, Size);
+if (ob != nullptr)
+VectorToken.push_back(move(ob));
+}
+else if (Line.at(IdentifierString) == '\"') { // Начинаем считывать значение из двойных ковычек
+unique_ptr<Token> ob(new Token());
+ob->SetTypeToken(Token::Words::DoubleQuote);
+ob->SetStrNumber(LineNumber);
+ob->SetColNumber(IdentifierString + 1);
+//cout « "Loc<" « LineNumber « ":" « (IdentifierString + 1) « "> " « ob->GetTypeToken() « " '" « '\"' « "'" « endl;
+СharacterReadMode = 2;
+}
+else
+{
+UnexpectedToken(Line, LineNumber, VectorToken, IdentifierString, Size);
+}
+IdentifierString++;
+}
+}
+}

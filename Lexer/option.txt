@@ -1,0 +1,24 @@
+all: main
+
+func.o: func.cpp
+	mpic++ -std=c++11 -c func.cpp
+
+main.o:main.cpp
+	mpic++ -std=c++11 -c main.cpp
+
+main: main.o func.o
+	mpic++ -o main func.o main.o -lm
+
+clean:
+	rm -f *.o main
+
+Создание библиотеки.
+пример сосдал исходник с именем demo.c
+пошаговая схема:
+1.gcc -c demo.c
+2.ar rs libbasic.a demo.o
+использование созданной библиотеки .
+пример:
+прога с именем primer.c
+1.gcc -c primer.c
+2.gcc -o primer primer.o libbasic.a
