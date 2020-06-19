@@ -18,7 +18,7 @@ bool GetNextToken(int &index, int size, vector<unique_ptr<Token>> const &VectorT
 	if (index < size - 1)
 	{
 		index++;
-		cout << VectorToken[index]->GetString() << " " << index << "/" << size << endl;
+		//cout << VectorToken[index]->GetString() << " " << index << "/" << size << endl;
 		return true;
 	}
 	return false;
@@ -62,7 +62,7 @@ string CheckSystemDigit(Token::Words t)
 
 bool Parser::CheckThisIsBlock(string str)
 {
-	cout << "CheckThisIsBlock = " << str << endl;
+	//cout << "CheckThisIsBlock = " << str << endl;
  	if (str == "class ASTIf" || str == "class ASTWhile:" || str == "class ASTSubBlock" || str == "class ASTElse")
 		return true;
 	return false;
@@ -178,7 +178,7 @@ unique_ptr<AST> Parser::ParseIdentifierASTArray(vector<unique_ptr<Token>> const 
 
 	if (str == id->GetStrName() + " without definition" || str == id->GetStrName() + " has definition at this lvl")
 	{
-		cout << "ParseIdentifierASTArray" << " " << str << endl;
+		//cout << "ParseIdentifierASTArray" << " " << str << endl;
 		return Correctness(VectorToken, index, size, " " + str);	
 	}
 	id->SetStrType(str);// Запись типа в узел
@@ -260,7 +260,7 @@ unique_ptr<AST> Parser::ParseIdentifierAST(vector<unique_ptr<Token>> const &Vect
 		//Запуск чтения/обработки массива
 		return ParseIdentifierASTArray(VectorToken, index, size, IdName, move(id), scope, indexFun, SubTable);
 	}
-	else if (VectorToken[index]->GetTypeToken() == Token::Words::Point && /*IdName == "Console")*/(IdName == "Console" || CheckDeclaretion(scope + to_string(indexFun), id->GetStrName(), id->GetStrType(), id, SubTable) == "string"))
+	else if (VectorToken[index]->GetTypeToken() == Token::Words::Point && IdName == "Console")/*(IdName == "Console" || CheckDeclaretion(scope + to_string(indexFun), id->GetStrName(), id->GetStrType(), id, SubTable) == "string"))*/
 	{
 		//cout << "id =========" << CheckDeclaretion(scope + to_string(indexFun), id->GetStrName(), id->GetStrType(), id, SubTable) << endl;
 		//Запуск чтения/обработки вызова метода
@@ -294,6 +294,7 @@ unique_ptr<AST> Parser::ParseNumberStringAST(vector<unique_ptr<Token>> const &Ve
 unique_ptr<AST> Parser::ParsePrimary(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable)
 {
 	unique_ptr<AST> ob(new AST());//Вспомогательный узел AST
+	string NodeName = "";
 	if (FlagDefenition != "")
 	{
 		
@@ -317,21 +318,30 @@ unique_ptr<AST> Parser::ParsePrimary(vector<unique_ptr<Token>> const &VectorToke
 	case Token::Words::Bool:
 		
 		ob = ParseTypeIdentifierAST(VectorToken, index, size, SubTable, scope, indexFun);// Определение выражения
-		
+		//cout << "ParseTypeIdentifierAST->" << endl;
+
 		//Возвращаем функцию проверки узла
+		if (ob != nullptr)
+		{
+			NodeName = typeid(*ob).name();
+			RedactionString(NodeName);//Строка приводится в годное состояние
+			//cout << NodeName << endl;
+			if (NodeName == "ASTLocal")
+				return move(ob);
+		}
 		return CheckOb(VectorToken, index, scope, indexFun, SubTable, " parseTypeIdentifierAST return nullptr", move(ob));
 	case Token::Words::Identifier:
-		cout << "Identifier" << endl;
+		//cout << "Identifier" << endl;
 		ob = ParseIdentifierAST(VectorToken, index, size, scope, indexFun, SubTable);// выражение
 		
 		//Возвращаем функцию проверки узла
-		if (ob != nullptr && ob->GetStrType() == "string" && ob->GetExpressionL() != nullptr) return move(ob);
+		if (ob != nullptr && ob->GetStrType() == "int" && ob->GetMethodLength()) return move(ob);
 		return CheckOb(VectorToken, index, scope, indexFun, SubTable, " parseIdentifierAST return nullptr", move(ob));
 	case Token::Words::CallMethodId:
 		FlagEqual = 1;//Флаг нужный для проверки корректности операций
 		
 		ob = ParseIdentifierAST(VectorToken, index, size, scope, indexFun, SubTable);// выражение
-		
+		//if (ob != nullptr && ob->GetStrType() == "int" && ob->GetMethodLength()) return move(ob);
 		//Возвращаем функцию проверки узла
 		return CheckOb(VectorToken, index, scope, indexFun, SubTable, " parseIdentifierAST return nullptr", move(ob));
 	case Token::Words::Binary:
@@ -438,7 +448,7 @@ unique_ptr<AST> Parser::ParseBinOpRHS(int ExprPrec, unique_ptr<AST> LHS, vector<
 		if (RHS->GetExpressionL() != nullptr)//Проверка инициализации переменной с помощью ввода
 		{
 			string s = typeid(*RHS->GetExpressionL()).name();
-			cout << s << " " << RHS->GetExpressionL()->GetStrName() << endl;
+			//cout << s << " " << RHS->GetExpressionL()->GetStrName() << endl;
 			if (s == "class ASTCallFun" && RHS->GetExpressionL()->GetStrName() != "ReadLine")
 			{
 				Correctness(VectorToken, index, size, " use output method in operations");
@@ -559,7 +569,7 @@ unique_ptr<AST> Parser::ReadFunLocal(vector<unique_ptr<Token>> const &VectorToke
 
 	//Проверка наличия id фун-ии в таблице символов на соответствующем уровне
 	string str = CheckDeclaretion(scope, fun->GetStrName(), fun->GetStrType(), fun, SubTableFun);
-	cout << "ReadFunLocal" << " " << fun->GetStrName() + " has definition at this lvl" << endl;
+	//cout << "ReadFunLocal" << " " << fun->GetStrName() << " " << fun->GetStrType() << endl;
 
 	//Возвращение ошибки в случаи, если имеются id на данном уровне с таким же именем
 	if (str == fun->GetStrName() + " has definition at this lvl") return Correctness(VectorToken, index, size, str);
@@ -586,6 +596,7 @@ unique_ptr<AST> Parser::ReadFunLocal(vector<unique_ptr<Token>> const &VectorToke
 
 	GetNextToken(index, size, VectorToken);//Пропуск }
 
+	//cout << "end read fun local" << endl;
 	return make_unique<ASTLocal>(move(fun), move(funbody), scope);//Возвращение узла локальной функции
 }
 
@@ -729,6 +740,7 @@ vector<unique_ptr<AST>> Parser::ReadFunBody(vector<unique_ptr<Token>> const &Vec
 
 			break;
 		case Token::Words::RightCurly://Если встретили }, завершение чтения тела функции, вектор узлов вернется
+			//cout << "end fun" << endl;
 			return move(bodyfun);
 		case Token::Words::Semicolon:
 			GetNextToken(index, size, VectorToken);
@@ -822,6 +834,7 @@ vector<unique_ptr<AST>> Parser::ReadBodyClass(vector<unique_ptr<Token>> const &V
 
 	GetNextToken(index, size, VectorToken);// Пропуск {
 
+
 	while (VectorToken[index]->GetTypeToken() == Token::Words::KeyWordStatic || VectorToken[index]->GetTypeToken() == Token::Words::Public)// Условие начала чтения и обработки статической функции
 	{
 		if (VectorToken[index]->GetTypeToken() == Token::Words::Public)GetNextToken(index, size, VectorToken);// Пропуск public
@@ -834,7 +847,7 @@ vector<unique_ptr<AST>> Parser::ReadBodyClass(vector<unique_ptr<Token>> const &V
 		string str = CheckDeclaretion(scope + to_string(indexClass), fun->GetStrName(), fun->GetStrType(), fun, SubTableFun);// Проверка наличия такого же id(имя функции) в таблице символов
 
 		//Если уже имеется статическая функция с таким же именем, то вернет ошибку
-		if (/*str == fun->GetStrName() + " without definition" || */str == fun->GetStrName() + " has definition at this lvl") return LogErrorVector(VectorToken[index]->GetStrNum(), VectorToken[index]->GetColNum(), str);
+		if (/*str == fun->GetStrName() + " without definition" || */str == fun->GetStrName() + " has definition at this lvl") return LogErrorVector(VectorToken[index]->GetStrNum(), VectorToken[index]->GetColNum(), str); 
 		fun->SetStrType(str);// Запись типа в узел
 
 		//Начала обработки тела функции
@@ -869,7 +882,7 @@ vector<unique_ptr<AST>> Parser::ReadBodyClass(vector<unique_ptr<Token>> const &V
 
 	if (VectorToken[index]->GetTypeToken() != Token::Words::RightCurly)  return CorrectnessVect(VectorToken, index, size, " expected '}' in end class");
 
-	GetNextToken(index, size, VectorToken);
+	//GetNextToken(index, size, VectorToken);//пропуск }
 	return move(Vector);
 }
 
@@ -887,7 +900,7 @@ unique_ptr<AST> Parser::ReadClass(vector<unique_ptr<Token>> const &VectorToken, 
 		if (Class == nullptr || FlagError == 1) return Correctness(VectorToken, index, size, "");// Если произошла ошибка вернется Correctness 
 
 		Class->AddVectorChildren(move(ClassNodesVector));// Привязывается вектор узлов тела класса к узлу соответствующего класса
-
+		//cout << "index = " << index << endl;
 		return move(Class);
 	}
 	
@@ -957,17 +970,16 @@ vector<unique_ptr<AST>> Parser::BuildAST(vector<unique_ptr<Token>> const &Vector
 	return move(RootVector);
 }
 
-void Parser::Parsing(vector<unique_ptr<Token>> const &VectorToken, int size)
+void Parser::Parsing(vector<unique_ptr<Token>> const &VectorToken, int size, int option)
 {
 	auto Vect = BuildAST(VectorToken, size);
 	unique_ptr<AST> R(new ASTRoot(move(Vect)));
 	Root = move(R);
 
-	if (FlagError == 0)
+	if (FlagError == 0 && option)
 	{
 		Root->print(2);
-
-		PrintTable();
+		//PrintTable();
 	}
 }
 

@@ -15,6 +15,8 @@ class AST
 	string scope = "";
 
 public:
+	virtual void SetMethodLength() {}
+	virtual bool GetMethodLength() { return false; }
 	void space_print(int space) { for (int i = 0; i < space; i++) cout << " "; }
 	virtual string GetStrName() { return "unssigned"; }
 	virtual string GetStrType() { return "unssigned"; }
@@ -370,7 +372,7 @@ public:
 	{
 		return scope;
 	}
-	
+
 	unique_ptr<AST> const &GetExpressionL()
 	{
 		return Method;
@@ -384,6 +386,7 @@ class ASTIdentifier : public AST
 	unique_ptr<AST> Method = nullptr;
 	bool Declar = false;
 	string scope = "";
+	bool Length = false;
 	//unique_ptr<AST> Parent;
 
 public:
@@ -400,6 +403,10 @@ public:
 		}
 	}
 	ASTIdentifier(string const &name, string s) : Name(name), scope(s) {}
+
+	void SetMethodLength() { Length = true;}
+
+	bool GetMethodLength() { return Length; }
 
 	bool GetDeclar() { return Declar; }
 

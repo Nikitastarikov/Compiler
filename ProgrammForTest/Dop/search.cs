@@ -26,7 +26,6 @@ public class Program
             }
 
             if(count == stroka.Length) {
-                strokaLength;
                 Console.Write("Является подстрокой!");
                 i = stroka.Length;
             }

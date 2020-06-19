@@ -35,7 +35,7 @@ public:
 	//friend class SemanticAnalysis;
 	Parser() {}
 	map<string, vector<ScopeVar>> const &GetTableSymbol() { return Table; }
-	void Parsing(vector<unique_ptr<Token>> const &VectorToken, int size);
+	void Parsing(vector<unique_ptr<Token>> const &VectorToken, int size, int option);
 	int GetTokPrecedence(vector<unique_ptr<Token>> const &VectorToken, int &index, int size);
 	bool CheckDigit(vector<unique_ptr<Token>> const &VectorToken, int index);
 	bool CheckType(vector<unique_ptr<Token>> const &VectorToken, int index);
@@ -144,15 +144,13 @@ public:
 
 	unique_ptr<AST> CheckOb(vector<unique_ptr<Token>> const &VectorToken, int &index, string scope, int indexFun, vector<ScopeVar> &SubTable, string Error, unique_ptr<AST> ob)
 	{
-		//cout << "CheckOB " << ob->GetStrType() << " " << ob->GetStrName() << endl;
 		if (ob != nullptr)
 		{
-			//cout << "!!!!CheckOb!!!!-> " << ob->GetStrName() << endl;
 			if (ob->GetStrName() != "Console")
 			{		
-				//cout << "!!!!CheckOb!!!! " << ob->GetStrName() << endl;
 				string str = CheckDeclaretion(scope, ob->GetStrName(), ob->GetStrType(), ob, SubTable);
 				
+				//cout << "CheckOb " << ob->GetStrName() << " " << ob->GetStrType() << endl;
 				if (str == ob->GetStrName() + " without definition" || str == ob->GetStrName() + " has definition at this lvl")
 					return LogError(VectorToken[index]->GetStrNum(), VectorToken[index]->GetColNum(), " " + str);
 				ob->SetStrType(str);
@@ -174,25 +172,28 @@ public:
 			if (VectorToken[index]->GetString() == "Write" || VectorToken[index]->GetString() == "WriteLine")
 			{
 				GetNextToken(index, size, VectorToken);
-				auto Method = ParseIdentifierASTFun(VectorToken, index, size, VectorToken[index]->GetString(), scope, indexFun, SubTable, 0);
+				auto Method = ParseIdentifierASTFun(VectorToken, index, size, VectorToken[index - 1]->GetString(), scope, indexFun, SubTable, 0);
 				if (Method != nullptr) return make_unique<ASTIdentifier>(IdName, move(Method), scope);
 			}
-			else if (VectorToken[index]->GetString() == "ReadLine")
+			
+			if (VectorToken[index]->GetString() == "ReadLine")
 			{
 				GetNextToken(index, size, VectorToken);
-				auto Method = ParseIdentifierASTFun(VectorToken, index, size, VectorToken[index]->GetString(), scope, indexFun, SubTable, 1);
+				auto Method = ParseIdentifierASTFun(VectorToken, index, size, VectorToken[index - 1]->GetString(), scope, indexFun, SubTable, 1);
 				if (Method != nullptr) return make_unique<ASTIdentifier>(IdName, move(Method), scope);
 			}
-			else if (IdName != "Console" && VectorToken[index]->GetString() == "Length")
+			/*else if (IdName != "Console" && VectorToken[index]->GetString() == "Length")
 			{
 				//GetNextToken(index, size, VectorToken);
 				auto Method = ParseIdentifierAST(VectorToken, index, size, scope, indexFun, SubTable);
 				if (Method != nullptr)
 				{
-					Method->SetStrType("Int");
-					return make_unique<ASTString>(IdName, scope, move(Method));
+					Method->SetStrType("int");
+					Method->SetMethodLength();
+					return move(Method);
+					//return make_unique<ASTString>(IdName, scope, move(Method));
 				}
-			}
+			}*/
 
 			return Correctness(VectorToken, index, size, " the " + IdName + " does't have a " + VectorToken[index]->GetString() + " method");
 		}

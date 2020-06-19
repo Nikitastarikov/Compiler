@@ -21,7 +21,7 @@ bool SemanticAnalysis::SemanticAnalysisStart(vector<unique_ptr<AST>> const &Vect
 		}
 		index++;
 	}
-	cout << endl << "Semantic GooD!!!" << endl;
+	//cout << endl << "Semantic GooD!!!" << endl;
 	return true;
 
 }
@@ -37,7 +37,7 @@ bool SemanticAnalysis::CheckingClassSemantics(unique_ptr<AST> const &NodeClass, 
 			string str = typeid(*NodeClass->GetChild()[index]).name();
 			RedactionString(str);//Строка приводится в годное состояние
 
-			cout << "Inside " << typeid(*NodeClass).name() << " CheckingClassSemantics: " << str << endl;
+			//cout << "Inside " << typeid(*NodeClass).name() << " CheckingClassSemantics: " << str << endl;
  			if (str == "ASTStatic")
 			{
 				//Обработка семантики статической функции
@@ -56,7 +56,7 @@ bool SemanticAnalysis::CheckingClassSemantics(unique_ptr<AST> const &NodeClass, 
 //Функция проверки семантики тела функции
 bool SemanticAnalysis::CheckingBodyFunSemantics(unique_ptr<AST> const &NodeBodyFun, map<string, vector<ScopeVar>> &Table, string ReturnType)
 {
-	cout << "returntype = " << ReturnType << endl;
+	//cout << "returntype = " << ReturnType << endl;
 	int index = 0;
 
 	if (!NodeBodyFun->GetChild().empty())
@@ -65,7 +65,7 @@ bool SemanticAnalysis::CheckingBodyFunSemantics(unique_ptr<AST> const &NodeBodyF
 		{
 			string str = typeid(*NodeBodyFun->GetChild()[index]).name();
 			RedactionString(str);//Строка приводится в годное состояние
-			cout << "Inside " << typeid(*NodeBodyFun).name() << " CheckingBodyFunSemantics: " << str << endl;
+			//cout << "Inside " << typeid(*NodeBodyFun).name() << " CheckingBodyFunSemantics: " << str << endl;
 			if (str == "ASTArray" && !CheckSemanticArray(NodeBodyFun->GetChild()[index], Table))// Проверка семантики массива
 			{
 				SemError("array");
@@ -252,12 +252,12 @@ bool SemanticAnalysis::CheckSemanticArray(unique_ptr<AST> const &NodeArray, map<
 bool SemanticAnalysis::CheckSemanticOperation(unique_ptr<AST> const &NodeOperation, map<string, vector<ScopeVar>> &Table)
 {
 	if (NodeOperation->GetExpressionR() == nullptr && (NodeOperation->GetStrName() == "++" || NodeOperation->GetStrName() == "--")) return true;
-	
+
 	string NodeName = typeid(*NodeOperation->GetExpressionR()).name();
 	RedactionString(NodeName);//Строка приводится в годное состояние
 
-	cout << "CheckSemanticOperation: " << NodeName << endl;
-	cout << NodeOperation->GetStrName() << endl;
+	//cout << "CheckSemanticOperation: " << NodeName << endl;
+	//cout << NodeOperation->GetStrName() << endl;
 
 	if (NodeName == "ASTOperationBin" && !CheckSemanticOperation(NodeOperation->GetExpressionR(), Table))// Если дерево операций продолжается, продолжается проверка
 	{
@@ -274,20 +274,24 @@ bool SemanticAnalysis::CheckSemanticOperation(unique_ptr<AST> const &NodeOperati
 		else if (NodeName == "ASTIdentifier" && !CheckSemanticId(NodeOperation->GetExpressionR(), Table))//Проверка семантики переменной
 			return false;
 
-		if (NodeName == "ASTDigit" && NodeOperation->GetExpressionR()->GetStrType() != "NotInteger")
-			temp = "int";
+		temp = NodeOperation->GetExpressionR()->GetStrType();
 
 		NodeName = typeid(*NodeOperation->GetExpressionL()).name();
 		RedactionString(NodeName);//Строка приводится в годное состояние
-
-		if (NodeName == "ASTDigit" && NodeOperation->GetExpressionR()->GetStrType() != "NotInteger")
-				NodeName = "int";
-		else
+		//cout << "op " << NodeName << endl;
+		//if (NodeName == "ASTDigit" && NodeOperation->GetExpressionR()->GetStrType() != "NotInteger")
+		//		NodeName = "int";
+		//else
 			NodeName = NodeOperation->GetExpressionL()->GetStrType();
+			//cout << NodeOperation->GetExpressionR()->GetStrName() << endl;
 
-		if (!CheckTwoTypes(NodeName, temp))//Проверка возможности привидения определенных типов
+		if (NodeOperation->GetExpressionR()->GetStrName() == "Console" && NodeOperation->GetExpressionR()->GetExpressionL() != nullptr/* && NodeOperation->GetExpressionR()->GetExpressionL()->GetStrName() == "ReadLine"*/)
 		{
-			SemError(NodeOperation->GetExpressionL()->GetStrType() + " can't lead to " + NodeOperation->GetExpressionR()->GetStrType());
+			//cout << NodeOperation->GetExpressionR()->GetExpressionL()->GetStrName() << endl;
+		}
+		else if (!CheckTwoTypes(NodeName, temp))//Проверка возможности привидения определенных типов
+		{
+			SemError(NodeOperation->GetExpressionL()->GetStrType() + " can't lead to " + temp + ": " + NodeOperation->GetExpressionL()->GetStrName() + " " + NodeOperation->GetStrName() + " " + NodeOperation->GetExpressionR()->GetStrName());
 			return false;
 		}
 	}
@@ -300,7 +304,7 @@ bool SemanticAnalysis::StartCheckSemanticOperation(unique_ptr<AST> const &NodeOp
 	string NodeName = typeid(*NodeOper->GetExpressionL()).name();
 	RedactionString(NodeName);//Строка приводится в годное состояние
 
-	cout << "StartCheckSemanticOperation: " << NodeName << endl;
+	//cout << "StartCheckSemanticOperation: " << NodeName << endl;
 	if (NodeName == "ASTIdentifier" && !CheckSemanticId(NodeOper->GetExpressionL(), Table))//Проверка семантики id
 	{
 		return false;
@@ -345,7 +349,7 @@ bool SemanticAnalysis::CheckSemanticReturn(unique_ptr<AST> const &NodeReturn, ma
 	string NameNode = typeid(*NodeReturn->GetExpressionL()).name();
 	RedactionString(NameNode);//Строка приводится в годное состояние
 
-	cout << "CheckSemanticReturn " << NameNode << endl;
+	//cout << "CheckSemanticReturn " << NameNode << endl;
 	if (NameNode == "ASTIdentifier" && !CheckReturnElement(NodeReturn->GetExpressionL()->GetStrType(), ReturnType, CheckSemanticId(NodeReturn->GetExpressionL(), Table)))
 		return false;
 	else if (NameNode == "ASTString" && !CheckReturnElement(NodeReturn->GetExpressionL()->GetStrType(), ReturnType))	
@@ -381,12 +385,12 @@ bool SemanticAnalysis::CheckSemanticId(unique_ptr<AST> const &NodeId, map<string
 
 	if (NodeId->GetStrName() != "Console")
 	{
-		cout << "!!!!" << NodeName << endl;
-		cout << NodeId->GetStrName() << endl;
-		cout << NodeId->GetScope() << endl;
+		//cout << "!!!!" << NodeName << endl;
+		//cout << NodeId->GetStrName() << endl;
+		//cout << NodeId->GetScope() << endl;
 		NodeName = CheckIdTableSymbol(NodeId->GetStrName(), NodeId->GetScope(), NodeId->GetStrType(), Table, NodeName);
 
-		cout << "CheckSemanticId: " << NodeName << endl;
+		//cout << "CheckSemanticId: " << NodeName << endl;
 		if (NodeName == "")
 		{
 			NodeName = typeid(*NodeId).name();
@@ -476,7 +480,7 @@ bool SemanticAnalysis::CheckCallFunArguments(unique_ptr<AST> const &NodeCallFun,
 				str = NodeCallFun->GetArgs()[index]->GetStrType();
 			}
 
-			cout << str << " " << ptr->GetArgs()[index]->GetStrType() << endl;
+			//cout << str << " " << ptr->GetArgs()[index]->GetStrType() << endl;
 			if (ptr->GetArgs()[index]->GetStrType() != str)
 			{
 				SemError("CallFun: " + NodeCallFun->GetStrName() + " wrong type of arguments");
@@ -490,7 +494,7 @@ bool SemanticAnalysis::CheckCallFunArguments(unique_ptr<AST> const &NodeCallFun,
 
 bool SemanticAnalysis::CheckSemanticCallFun(unique_ptr<AST> const &NodeCallFun, map<string, vector<ScopeVar>> &Table)
 {
-	cout << "CheckSemanticCallFun " << typeid(*NodeCallFun).name() << endl;
+	//cout << "CheckSemanticCallFun " << typeid(*NodeCallFun).name() << endl;
 	string str = typeid(*NodeCallFun).name();
 	RedactionString(str);//Строка приводится в годное состояние
 	str = CheckIdTableSymbol(NodeCallFun->GetStrName(), NodeCallFun->GetScope(), NodeCallFun->GetStrType(), Table, str);
@@ -513,7 +517,7 @@ bool SemanticAnalysis::CheckSemanticCallFun(unique_ptr<AST> const &NodeCallFun, 
 
 string SemanticAnalysis::CheckIdName(vector<ScopeVar> &it, string name/*, map<string, vector<ScopeVar>> const &Table*/, string NodeType)
 {
-	cout << "CheckIdName: " << NodeType << " " << name << endl;
+	//cout << "CheckIdName: " << NodeType << " " << name << endl;
 	string str;
 	if (!it.empty())
 	{
@@ -525,7 +529,7 @@ string SemanticAnalysis::CheckIdName(vector<ScopeVar> &it, string name/*, map<st
 				RedactionString(str);//Строка приводится в годное состояние
 				if (NodeType == "ASTCallFun" && str == "ASTFun" || str == NodeType)
 					return it[index].getNode()->GetStrType();
-				cout << str << endl;
+				//cout << str << endl;
 			}	
 		}
 	}
@@ -537,13 +541,13 @@ string SemanticAnalysis::CheckIdTableSymbol(string name, string scope, string ty
 	if (type == "string" && NodeType == "ASTArray")
 		NodeType = "ASTIdentifier";
 
-	cout << "CheckIdTableSymbol: " << type << " " << name << " " << NodeType << " " << scope << endl;
+	//cout << "CheckIdTableSymbol: " << type << " " << name << " " << NodeType << " " << scope << endl;
 	map<string, vector<ScopeVar>>::iterator it = Table.begin();
 	
 	for (; it != Table.end(); it++)
 	{
 		int limit = it->first.size();
-		cout << scope << " " << it->first << endl;
+		//cout << scope << " " << it->first << endl;
 		if (scope.substr(0, limit) == it->first.substr(0, limit))
 		{
 			string temp;
@@ -558,7 +562,7 @@ string SemanticAnalysis::CheckIdTableSymbol(string name, string scope, string ty
 
 AST* const /*&*/SemanticAnalysis::SearchFunctionOrArrayDefinition(string name, string scope, string type, map<string, vector<ScopeVar>> &Table, string NodeType)
 {
-	cout << "SearchFunctionDefinition " << name << " " << type << endl;
+	//cout << "SearchFunctionDefinition " << name << " " << type << endl;
 	if (type == "string" && NodeType == "ASTArray")
 		NodeType = "ASTIdentifier";
 
@@ -568,7 +572,7 @@ AST* const /*&*/SemanticAnalysis::SearchFunctionOrArrayDefinition(string name, s
 	for (; it != Table.end(); it++)
 	{
 		int limit = it->first.size();
-		cout << scope << " " << it->first << endl;
+		//cout << scope << " " << it->first << endl;
 		if (scope.substr(0, limit) == it->first.substr(0, limit))
 		{
 			if (!it->second.empty())
@@ -592,7 +596,7 @@ AST* const /*&*/SemanticAnalysis::SearchFunctionOrArrayDefinition(string name, s
 
 bool SemanticAnalysis::CheckTwoTypes(string TypeOne, string TypeTwo)
 {
-	cout << "Type: " << TypeOne << ":" << TypeTwo << endl;
+	//cout << "Type: " << TypeOne << ":" << TypeTwo << endl;
 	if (TypeOne == "var" || TypeTwo == "var")
 	{
 		return true;
