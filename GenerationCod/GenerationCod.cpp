@@ -159,8 +159,27 @@ void GenerationCod::ExprIF(unique_ptr<AST> const &NodeIfExp, ofstream &fileoutpu
 		}
 		else 
 		{
-			int i = atoi(NodeIfExp->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl " << NodeIfExp->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+			string str = typeid(*NodeIfExp->GetExpressionL()->GetIndex()[0]).name();
+			RedactionString(str);
+
+			if (str == "ASTDigit")
+			{	
+				int i = atoi(NodeIfExp->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl " << NodeIfExp->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+			}
+			else
+			{
+				fileoutput << "\tmovl " << NodeIfExp->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << NodeIfExp->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+			}
+			/*else if (str == "ASTIdentifier")
+			{
+				str = NodeIfExp->GetExpressionL()->GetStrName();
+				fileoutput << "\tmovl str, %ecx" << endl;
+				fileoutput << "\tmovl " << str <<"(,%ecx,4), %eax" << endl;
+				//movl array_start(,%ecx,4), %eax
+			}*/
+			
 		}
 		
 		if (NodeNameTwo != "ASTArray")
@@ -171,16 +190,37 @@ void GenerationCod::ExprIF(unique_ptr<AST> const &NodeIfExp, ofstream &fileoutpu
 		}
 		else 
 		{
-			int i = atoi(NodeIfExp->GetExpressionR()->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl " << NodeIfExp->GetExpressionR()->GetStrName() << "+" << i * 4 << ", %ebx" << endl;
+			string str = typeid(*NodeIfExp->GetExpressionR()->GetIndex()[0]).name();
+			RedactionString(str);
+
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeIfExp->GetExpressionR()->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl " << NodeIfExp->GetExpressionR()->GetStrName() << "+" << i * 4 << ", %ebx" << endl;
+			}
+			else
+			{
+				fileoutput << "\tmovl " << NodeIfExp->GetExpressionR()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << NodeIfExp->GetExpressionR()->GetStrName() << "(, %ecx, 4), %ebx" << endl;
+			}
 		}
 
 		if (NodeNameOne != "ASTArray")
 			WriteOperIf(fileoutput, NodeIfExp->GetExpressionL()->GetStrName(), NodeIfExp->GetExpressionR()->GetStrName(), NodeIfExp->GetStrName(), nameblock);
 		else 
 		{
-			int i = atoi(NodeIfExp->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			string str = NodeIfExp->GetExpressionL()->GetStrName() + "+" + to_string(i * 4);
+			string str = typeid(*NodeIfExp->GetExpressionL()->GetIndex()[0]).name();
+			RedactionString(str);
+
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeIfExp->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+				str = NodeIfExp->GetExpressionL()->GetStrName() + "+" + to_string(i * 4);
+			}
+			else 
+			{
+				str = NodeIfExp->GetExpressionL()->GetStrName() + "(, %ecx, 4)";
+			}
 			//cout << "str = " << str << endl;
 			WriteOperIf(fileoutput, str, NodeIfExp->GetExpressionR()->GetStrName(), NodeIfExp->GetStrName(), nameblock);
 		}
@@ -213,12 +253,26 @@ void GenerationCod::ifPass(unique_ptr<AST> const &NodeIf, ofstream &fileoutput, 
 		fileoutput << "\tjng blocif" << scope << endl << endl;
 	}
 	else if (NodeName == "ASTArray")
-	{
-		int i = atoi(NodeIf->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-		fileoutput << "\tmovl " << NodeIf->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
-		fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-		fileoutput << "\tcmp %ebx, %eax" << endl;
-		fileoutput << "\tjng blocif" << scope << endl << endl;
+	{ 
+		string str = typeid(*NodeIf->GetExpressionL()->GetIndex()[0]).name();
+		RedactionString(str);
+
+		if (str == "ASTDigit")
+		{
+			int i = atoi(NodeIf->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+			fileoutput << "\tmovl " << NodeIf->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
+			fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
+			fileoutput << "\tcmp %ebx, %eax" << endl;
+			fileoutput << "\tjng blocif" << scope << endl << endl;
+		}
+		else 
+		{
+			fileoutput << "\tmovl " << NodeIf->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+			fileoutput << "movl " << NodeIf->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+			fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
+			fileoutput << "\tcmp %ebx, %eax" << endl;
+			fileoutput << "\tjng blocif" << scope << endl << endl;	
+		}
 	}
 	else if (NodeName == "ASTOperationBin")
 	{
@@ -256,11 +310,24 @@ void GenerationCod::whilePass(unique_ptr<AST> const &NodeOper, ofstream &fileout
 	}
 	else if (NodeName == "ASTArray")
 	{
-		int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-		fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
-		fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-		fileoutput << "\tcmp %ebx, %eax" << endl;
-		fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
+		string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
+		RedactionString(str);
+		if (str == "ASTDigit")
+		{
+			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+			fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
+			fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
+			fileoutput << "\tcmp %ebx, %eax" << endl;
+			fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
+		}
+		else 
+		{
+			fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+			fileoutput << "movl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+			fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
+			fileoutput << "\tcmp %ebx, %eax" << endl;
+			fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
+		}
 	}
 	else if (NodeName == "ASTOperationBin")
 	{
@@ -289,11 +356,24 @@ void GenerationCod::whilePass(unique_ptr<AST> const &NodeOper, ofstream &fileout
 	}
 	else if (NodeName == "ASTArray")
 	{
-		int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-		fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
-		fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-		fileoutput << "\tcmp %ebx, %eax" << endl;
-		fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
+		string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
+		RedactionString(str);
+		if (str == "ASTDigit")
+		{
+			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+			fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
+			fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
+			fileoutput << "\tcmp %ebx, %eax" << endl;
+			fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
+		}
+		else 
+		{
+			fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+			fileoutput << "movl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+			fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
+			fileoutput << "\tcmp %ebx, %eax" << endl;
+			fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
+		}
 	}
 	else if (NodeName == "ASTOperationBin")
 	{
@@ -388,8 +468,19 @@ void GenerationCod::RecursPass(unique_ptr<AST> const &NodeOper, ofstream &fileou
 			fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << endl << endl;
 		else
 		{
-			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << "+" << 4 * i << endl << endl;
+			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
+			RedactionString(str);
+			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << "+" << 4 * i << endl << endl;
+			}
+			else 
+			{
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+			}
 		} 
 	}
 	
@@ -405,8 +496,19 @@ void GenerationCod::RecursPass(unique_ptr<AST> const &NodeOper, ofstream &fileou
 		}
 		else 
 		{
-			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
+			RedactionString(str);
+			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+			}
+			else 
+			{
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+			}
 		}
 		
 		if (NodeNameTwo != "ASTArray")
@@ -417,17 +519,39 @@ void GenerationCod::RecursPass(unique_ptr<AST> const &NodeOper, ofstream &fileou
 		}
 		else 
 		{
-			int i = atoi(NodeOper->GetExpressionR()->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl " << NodeOper->GetExpressionR()->GetStrName() << "+" << i * 4 << ", %ebx" << endl;
+			string str = typeid(*NodeOper->GetExpressionR()->GetIndex()[0]).name();
+			RedactionString(str);
+			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeOper->GetExpressionR()->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl " << NodeOper->GetExpressionR()->GetStrName() << "+" << i * 4 << ", %ebx" << endl;
+			}
+			else 
+			{
+				fileoutput << "\tmovl " << NodeOper->GetExpressionR()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << NodeOper->GetExpressionR()->GetStrName() << "(, %ecx, 4), %ebx" << endl;
+			}
 		}
 
 		if (NodeNameOne != "ASTArray")
 			WriteOper(fileoutput, NodeOper->GetExpressionL()->GetStrName(), NodeOper->GetExpressionR()->GetStrName(), NodeNameOne, NodeNameTwo, NodeOper->GetStrName());
 		else 
 		{
-			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			string str = NodeOper->GetExpressionL()->GetStrName() + "+" + to_string(i * 4);
-			//cout << "str = " << str << endl;
+			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
+			RedactionString(str);
+			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+				str = NodeOper->GetExpressionL()->GetStrName() + "+" + to_string(i * 4);
+				//cout << "str = " << str << endl;
+			}
+			else 
+			{
+				//fileoutput << "\tmovl " << NodeOper->GetExpressionL()GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				str = NodeOper->GetExpressionL()->GetStrName() + "(, %ecx, 4)"; 
+			}
 			WriteOper(fileoutput, str, NodeOper->GetExpressionR()->GetStrName(), NodeNameOne, NodeNameTwo, NodeOper->GetStrName());
 		}
 	}
@@ -459,9 +583,21 @@ void GenerationCod::CalculationsPass(unique_ptr<AST> const &NodeOper, ofstream &
 		}
 		else
 		{
-			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl $" << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
-			fileoutput << "\tpushl %eax" << endl; 
+			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
+			RedactionString(str);
+			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl $" << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+				fileoutput << "\tpushl %eax" << endl;
+			} 
+			else
+			{
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+				fileoutput << "\tpushl %eax" << endl;	
+			}
 		}
 
 		fileoutput << "\tpushl " << "$format_l" << endl;
@@ -475,10 +611,24 @@ void GenerationCod::CalculationsPass(unique_ptr<AST> const &NodeOper, ofstream &
 		}
 		else 
 		{
-			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
-			fileoutput << "\tincl %eax" << endl;
-			fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << endl;
+			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
+			RedactionString(str);
+			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+				fileoutput << "\tdecl %eax" << endl;
+				fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << endl;
+			}
+			else
+			{
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+				fileoutput << "\tdecl %eax" << endl;
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4)" << endl;
+			}
 		}
 	}
 	else if (NodeOper->GetStrName() == "--")
@@ -491,10 +641,25 @@ void GenerationCod::CalculationsPass(unique_ptr<AST> const &NodeOper, ofstream &
 		}
 		else 
 		{
-			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
-			fileoutput << "\tdecl %eax" << endl;
-			fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << endl;
+			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
+			RedactionString(str);
+			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+
+			if (str == "ASTDigit")
+			{
+				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+				fileoutput << "\tdecl %eax" << endl;
+				fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << endl;
+			}
+			else
+			{
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
+				fileoutput << "\tdecl %eax" << endl;
+				fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl %eax, " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4)" << endl;
+			}
 		}
 	}
 	else 
@@ -528,8 +693,19 @@ void GenerationCod::CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &fileout
 		else if (name == "ASTArray")
 		{
 			//cout << CallPrn->GetArgs()[0]->GetIndex()[0]->GetStrName() << endl;
-			int i = atoi(CallPrn->GetArgs()[0]->GetIndex()[0]->GetStrName().c_str());
-			fileoutput << "\tmovl " << CallPrn->GetArgs()[0]->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+			string temp = typeid(CallPrn->GetArgs()[0]->GetIndex()[0]).name();
+			RedactionString(temp);
+
+			if (temp == "ASTDigit")
+			{
+				int i = atoi(CallPrn->GetArgs()[0]->GetIndex()[0]->GetStrName().c_str());
+				fileoutput << "\tmovl " << CallPrn->GetArgs()[0]->GetStrName() << "+" << i * 4 << ", %eax" << endl;
+			}
+			else 
+			{
+				fileoutput << "\tmovl " << CallPrn->GetArgs()[0]->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
+				fileoutput << "\tmovl " << CallPrn->GetArgs()[0]->GetStrName() << "(, %ecx, 4), %eax" << endl;
+			}
 			fileoutput << "\tpushl %eax" << endl;
 		}
 	}
