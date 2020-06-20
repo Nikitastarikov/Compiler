@@ -470,7 +470,7 @@ void GenerationCod::RecursPass(unique_ptr<AST> const &NodeOper, ofstream &fileou
 		{
 			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
 			RedactionString(str);
-			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			//cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
 			if (str == "ASTDigit")
 			{
 				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
@@ -498,7 +498,7 @@ void GenerationCod::RecursPass(unique_ptr<AST> const &NodeOper, ofstream &fileou
 		{
 			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
 			RedactionString(str);
-			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			//cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
 			if (str == "ASTDigit")
 			{
 				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
@@ -521,7 +521,7 @@ void GenerationCod::RecursPass(unique_ptr<AST> const &NodeOper, ofstream &fileou
 		{
 			string str = typeid(*NodeOper->GetExpressionR()->GetIndex()[0]).name();
 			RedactionString(str);
-			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			//cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
 			if (str == "ASTDigit")
 			{
 				int i = atoi(NodeOper->GetExpressionR()->GetIndex()[0]->GetStrName().c_str());
@@ -540,7 +540,7 @@ void GenerationCod::RecursPass(unique_ptr<AST> const &NodeOper, ofstream &fileou
 		{
 			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
 			RedactionString(str);
-			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			//cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
 			if (str == "ASTDigit")
 			{
 				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
@@ -585,7 +585,7 @@ void GenerationCod::CalculationsPass(unique_ptr<AST> const &NodeOper, ofstream &
 		{
 			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
 			RedactionString(str);
-			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			//cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
 			if (str == "ASTDigit")
 			{
 				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
@@ -613,7 +613,7 @@ void GenerationCod::CalculationsPass(unique_ptr<AST> const &NodeOper, ofstream &
 		{
 			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
 			RedactionString(str);
-			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			//cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
 			if (str == "ASTDigit")
 			{
 				int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
@@ -643,7 +643,7 @@ void GenerationCod::CalculationsPass(unique_ptr<AST> const &NodeOper, ofstream &
 		{
 			string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
 			RedactionString(str);
-			cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
+			//cout << "CalculationsPass1: str = " << str << " " << NodeOper->GetExpressionL()->GetStrName() << endl;
 
 			if (str == "ASTDigit")
 			{
