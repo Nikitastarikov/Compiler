@@ -46,4 +46,4 @@ scomp:
 
 .PHONY: run clean
 clean:
-	rm -rf build/*.o Compiler proga.s
+	rm -rf build/*.o Compiler proga.s proga
