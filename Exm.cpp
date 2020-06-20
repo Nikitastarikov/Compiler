@@ -17,28 +17,24 @@ using namespace std;
 int main(int argn, char **argv) {
 
 	int Options[3] = {0, 0, 0};
-	string Way = argv[1];
+	string Way;
 
-	if (argn == 1)
+	for (int i = 1; i < argn; i++)
 	{
-		cout << "no arguments" << endl;
-	}
-	else
-	{
-		for (int i = 0; i < argn; i++)
-		{
-			cout << "argv[" << i << "] = " << argv[i] << endl;
-			if (!strcmp("--dump-tokens", argv[i]))
-				Options[0] = 1;
-			else if (!strcmp("--dump-ast", argv[i]))
-				Options[1] = 1;
-			else if (!strcmp("--dump-asm", argv[i]))
-				Options[2] = 1;
-			
-			Way = argv[i];
-		}
+		cout << "argv[" << i << "] = " << argv[i] << endl;
+		if (!strcmp("--dump-tokens", argv[i]))
+			Options[0] = 1;
+		else if (!strcmp("--dump-ast", argv[i]))
+			Options[1] = 1;
+		else if (!strcmp("--dump-asm", argv[i]))
+			Options[2] = 1;
+		
+		Way = argv[i];
 	}
 	
+	if (argn == 1)
+		Way = "testone.cs";
+
 	cout << "Way: " << Way << endl;
 	cout << "flags: " << endl;
 	if (Options[0] == 1)
