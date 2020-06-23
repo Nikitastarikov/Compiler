@@ -7,9 +7,6 @@ CC = g++ -std=c++11 -o
 CFLAGS = -g3
 ARGS ?= default_args
 
-
-make test TEST_ARGS="-m core -r console"
-
 all: clean Compiler
 
 Compiler: build $(LO) $(PO) $(SO) $(GCO) $(EO)

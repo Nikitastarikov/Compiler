@@ -28,11 +28,11 @@ int main(int argn, char **argv) {
 			Options[1] = 1;
 		else if (!strcmp("--dump-asm", argv[i]))
 			Options[2] = 1;
-		
-		Way = argv[i];
+		else if (i == argn - 1)
+			Way = argv[i];
 	}
-	
-	if (argn == 1)
+
+	if (argn == 1 || Way == "")
 		Way = "testone.cs";
 
 	cout << "Way: " << Way << endl;
@@ -45,7 +45,7 @@ int main(int argn, char **argv) {
 		cout << "--dump-asm ";
 	cout << endl;
 
-	ifstream fileinput(/*"ProgrammForTest/Dop/search.cs"*/ Way, ios::in);
+	ifstream fileinput(Way, ios::in);
 	if (!fileinput) 
 	{
 		fileinput.close();
