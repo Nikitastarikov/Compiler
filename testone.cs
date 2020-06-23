@@ -4,7 +4,10 @@ class Begin
     static int main(int rio)
     {
     	int j = 5;
-        int i = 5 + 5 * j / (1 + 2);
-        Console.WriteLine(i);
+        while (j + 1 < 10 * 2 - 4)
+        {
+        	Console.WriteLine(j);
+        	j++;
+        }
     }
 }

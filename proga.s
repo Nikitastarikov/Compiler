@@ -7,48 +7,79 @@ main:
 	movl %esp, %ebp
 	xorl %eax, %eax
 	xorl %ebx, %ebx
+
 	movl j, %eax
 	movl $5, %ebx
 	movl %ebx,j
 	push %eax
 	xorl %eax, %eax
 	xorl %ebx, %ebx
+
 	xorl %eax, %eax
 	xorl %ebx, %ebx
+
 	xorl %eax, %eax
 	xorl %ebx, %ebx
-	xorl %eax, %eax
-	xorl %ebx, %ebx
-	movl $1, %eax
+
+	movl $10, %eax
 	movl $2, %ebx
-	addl %ebx, %eax
-	push %eax
-	xorl %eax, %eax
-	xorl %ebx, %ebx
-	movl $5, %eax
-	movl j, %ebx
 	mull %ebx
 	push %eax
 	popl %eax
-	popl %ebx
+	movl $4, %ebx
 	pushl %eax
-	idivl %ebx
+	sub %ebx, %eax
 	pushl %eax
-	popl %ebx
-	movl $5, %eax
 	pushl %eax
-	addl %ebx, %eax
-	pushl %eax
-	popl %ebx
-	movl i, %eax
-	pushl %eax
-	movl %ebx,i
-	pushl %eax
+	xorl %eax, %eax
+	xorl %ebx, %ebx
 
-	pushl i
+	movl j, %eax
+	movl $1, %ebx
+	addl %ebx, %eax
+	push %eax
+	popl %eax
+	popl %ebx
+
+	cmp %ebx, %eax
+	jnl else_blockWhile_1_1_2
+if_blockWhile_1_1_2:
+
+	pushl j
 	pushl $format_l_n
 	call printf
 
+	incl j
+	xorl %eax, %eax
+	xorl %ebx, %ebx
+
+	xorl %eax, %eax
+	xorl %ebx, %ebx
+
+	movl $10, %eax
+	movl $2, %ebx
+	mull %ebx
+	push %eax
+	popl %eax
+	movl $4, %ebx
+	pushl %eax
+	sub %ebx, %eax
+	pushl %eax
+	pushl %eax
+	xorl %eax, %eax
+	xorl %ebx, %ebx
+
+	movl j, %eax
+	movl $1, %ebx
+	addl %ebx, %eax
+	push %eax
+	popl %eax
+	popl %ebx
+
+	cmp %ebx, %eax
+	jnl else_blockWhile_1_1_2
+	jmp if_blockWhile_1_1_2
+else_blockWhile_1_1_2:
 	leave
 	ret
 
@@ -62,6 +93,4 @@ main:
 	rio:
 		.long 0
 	j:
-		.long 0
-	i:
 		.long 0

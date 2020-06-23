@@ -8,7 +8,7 @@ using namespace std;
 
 void GenerationCod::StartGenerationCod(vector<unique_ptr<AST>> const &VectorClass, map<string, vector<ScopeVar>> &Table, int option)
 {
-	int index = 0;
+	int IndexChildAST = 0;
 
 	//cout << endl << "Way to out file: " << Way << endl;
 	
@@ -33,19 +33,16 @@ void GenerationCod::StartGenerationCod(vector<unique_ptr<AST>> const &VectorClas
 	Fileoutput << "\tmovl %esp, %ebp" << endl;
 
 	//Основной код
-	while (index < VectorClass.size())
+	while (IndexChildAST < VectorClass.size())
 	{
-		string NodeName = typeid(*VectorClass[index]).name();// Запись имени узла
+		string NodeName = typeid(*VectorClass[IndexChildAST]).name();// Запись имени узла
 		RedactionString(NodeName);//Строка приводится в годное состояние
 
 		if (NodeName == "ASTClass")
 		{
-			if (!ClassPass(VectorClass[index], Fileoutput))
-			{
-				index = VectorClass.size();
-			}
+			ClassTraversal(VectorClass[IndexChildAST], Fileoutput);
 		}
-		index++;
+		IndexChildAST++;
 	}
 
 	//leave
@@ -80,65 +77,109 @@ void GenerationCod::StartGenerationCod(vector<unique_ptr<AST>> const &VectorClas
 	}
 }
 
-bool GenerationCod::ClassPass(unique_ptr<AST> const &NodeClass, ofstream &Fileoutput)
+void GenerationCod::ClassTraversal(unique_ptr<AST> const &NodeClass, ofstream &Fileoutput)
 {
-	int index;
+	int IndexChildAST;
 	if (!NodeClass->GetChild().empty())
 	{
-		while (index < NodeClass->GetChild().size())
+		while (IndexChildAST < NodeClass->GetChild().size())
 		{
-			string NodeName = typeid(*NodeClass->GetChild()[index]).name();
+			string NodeName = typeid(*NodeClass->GetChild()[IndexChildAST]).name();
 			RedactionString(NodeName);//Строка приводится в годное состояние
 
-			//cout << "Inside " << typeid(*NodeClass).name() << " ClassPass: " << NodeName << endl;
+			//cout << "Inside " << typeid(*NodeClass).name() << " ClassTraversal: " << NodeName << endl;
  			if (NodeName == "ASTStatic")
 			{
 				//Генерация кода для функции
-				if (!FunBodyPass(NodeClass->GetChild()[index], Fileoutput))
-				{
-					index = NodeClass->GetChild().size();
-					return false;
-				}	
+				FunBodyPass(NodeClass->GetChild()[IndexChildAST], Fileoutput);
 			}
-			index++;
+			IndexChildAST++;
 		}
 	}
-	return true;
 }
 
-void GenerationCod::WriteOperIf(ofstream &Fileoutput, string NodeNameOne, string NodeNameTwo, string op, string nameblock)
+void GenerationCod::FunBodyPass(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput)
+{
+	int IndexChildAST = 0;
+
+	if (!NodeBodyFun->GetChild().empty())
+	{
+		while (IndexChildAST < NodeBodyFun->GetChild().size())
+		{
+			string NodeName = typeid(*NodeBodyFun->GetChild()[IndexChildAST]).name();
+			string NameOfTheLeftSubnode = NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetStrName();
+			string ScopeOfTheLeftSubnode = NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetScope();
+			RedactionString(NodeName);//Строка приводится в годное состояние
+			
+			if (NodeName == "ASTIdentifier" && NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL() != nullptr && (NameOfTheLeftSubnode == "Write" || NameOfTheLeftSubnode == "WriteLine"))
+			{
+				CallPrintf(NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL(), Fileoutput);//Генерация Вывода
+			}
+			else if (NodeName == "ASTOperationBin")
+			{
+				StartArithmeticGeneration(NodeBodyFun->GetChild()[IndexChildAST], Fileoutput);//Генерация Арифметика
+			}
+			else if (NodeName == "ASTIf")
+			{
+				IfTraversal(NodeBodyFun->GetChild()[IndexChildAST], Fileoutput, ScopeOfTheLeftSubnode);//Генерация блока if
+			}
+			else if (NodeName == "ASTWhile")
+			{
+				WhileTraversal(NodeBodyFun->GetChild()[IndexChildAST], Fileoutput, ScopeOfTheLeftSubnode);//Генерация блока while
+			}
+
+			IndexChildAST++;
+		}
+	}
+}
+
+void GenerationCod::Compare(ofstream &Fileoutput, string op, string NameBlock)
 {
 	Fileoutput << "\tcmp %ebx, %eax" << endl;
 	if (op == "==")
 	{
-		Fileoutput << "\tjne " << nameblock << endl;
+		Fileoutput << "\tjne " << NameBlock << endl;
 	}
 	else if (op == "!=")
 	{
-		Fileoutput << "\tje " << nameblock << endl;
+		Fileoutput << "\tje " << NameBlock << endl;
 	}
 	else if (op == "<")
 	{
-		Fileoutput << "\tjnl " << nameblock << endl;
+		Fileoutput << "\tjnl " << NameBlock << endl;
 	}
 	else if (op == ">")
 	{
-		Fileoutput << "\tjng " << nameblock << endl;
+		Fileoutput << "\tjng " << NameBlock << endl;
 	}
 	else if (op == ">=")
 	{
-		Fileoutput << "\tjl " << nameblock << endl;
+		Fileoutput << "\tjl " << NameBlock << endl;
 	}
 	else if (op == "<=")
 	{
-		Fileoutput << "\tjg " << nameblock << endl;
+		Fileoutput << "\tjg " << NameBlock << endl;
 	}
 }
 
-void GenerationCod::ExprIF(unique_ptr<AST> const &NodeIfExp, ofstream &Fileoutput, string nameblock)
+void GenerationCod::ProcessingOperandIf(string NodeName, string Register, unique_ptr<AST> const &NodeExp, ofstream &Fileoutput)
+{
+	if (NodeName != "ASTOperationBin")
+	{
+		PreparingTheOperand(Register, NodeExp, Fileoutput);
+	}
+	else 
+	{
+		StartArithmeticGeneration(NodeExp, Fileoutput);
+	}
+}
+
+void GenerationCod::ExpressionIF(unique_ptr<AST> const &NodeIfExp, ofstream &Fileoutput, string NameBlock)
 {
 	string NodeNameOne = typeid(*NodeIfExp->GetExpressionL()).name();
 	string NodeNameTwo;
+	string RegisterAcum = "%eax";
+	string RegisterBas = "%ebx";
 	RedactionString(NodeNameOne);
 
 	if (NodeIfExp->GetExpressionR() != nullptr)
@@ -146,88 +187,43 @@ void GenerationCod::ExprIF(unique_ptr<AST> const &NodeIfExp, ofstream &Fileoutpu
 		NodeNameTwo = typeid(*NodeIfExp->GetExpressionR()).name();
 		RedactionString(NodeNameTwo);
 	}
-
-	if (NodeNameTwo != "ASTOperationBin" && NodeNameTwo != "ASTOperationBin")
+	else 
 	{
-		Fileoutput << "\txorl %eax, %eax" << endl;
-		Fileoutput << "\txorl %ebx, %ebx" << endl;
-		if (NodeNameOne != "ASTArray")
-		{
-			Fileoutput << "\tmovl "; 
-			if (NodeNameOne == "ASTDigit") Fileoutput << "$";
-			Fileoutput << NodeIfExp->GetExpressionL()->GetStrName() << ", %eax" << endl;// Помещение в аккум первый операнда
-		}
-		else 
-		{
-			string str = typeid(*NodeIfExp->GetExpressionL()->GetIndex()[0]).name();
-			RedactionString(str);
-
-			if (str == "ASTDigit")
-			{	
-				int i = atoi(NodeIfExp->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-				Fileoutput << "\tmovl " << NodeIfExp->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;
-			}
-			else
-			{
-				Fileoutput << "\tmovl " << NodeIfExp->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
-				Fileoutput << "\tmovl " << NodeIfExp->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
-			}
-			/*else if (str == "ASTIdentifier")
-			{
-				str = NodeIfExp->GetExpressionL()->GetStrName();
-				Fileoutput << "\tmovl str, %ecx" << endl;
-				Fileoutput << "\tmovl " << str <<"(,%ecx,4), %eax" << endl;
-				//movl array_start(,%ecx,4), %eax
-			}*/
-			
-		}
-		
-		if (NodeNameTwo != "ASTArray")
-		{
-			Fileoutput << "\tmovl ";
-			if (NodeNameTwo == "ASTDigit") Fileoutput << "$";
-			Fileoutput << NodeIfExp->GetExpressionR()->GetStrName() << ", %ebx" << endl;// Помещение в базовый второй операнда
-		}
-		else 
-		{
-			string str = typeid(*NodeIfExp->GetExpressionR()->GetIndex()[0]).name();
-			RedactionString(str);
-
-			if (str == "ASTDigit")
-			{
-				int i = atoi(NodeIfExp->GetExpressionR()->GetIndex()[0]->GetStrName().c_str());
-				Fileoutput << "\tmovl " << NodeIfExp->GetExpressionR()->GetStrName() << "+" << i * 4 << ", %ebx" << endl;
-			}
-			else
-			{
-				Fileoutput << "\tmovl " << NodeIfExp->GetExpressionR()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
-				Fileoutput << "\tmovl " << NodeIfExp->GetExpressionR()->GetStrName() << "(, %ecx, 4), %ebx" << endl;
-			}
-		}
-
-		if (NodeNameOne != "ASTArray")
-			WriteOperIf(Fileoutput, NodeIfExp->GetExpressionL()->GetStrName(), NodeIfExp->GetExpressionR()->GetStrName(), NodeIfExp->GetStrName(), nameblock);
-		else 
-		{
-			string str = typeid(*NodeIfExp->GetExpressionL()->GetIndex()[0]).name();
-			RedactionString(str);
-
-			if (str == "ASTDigit")
-			{
-				int i = atoi(NodeIfExp->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-				str = NodeIfExp->GetExpressionL()->GetStrName() + "+" + to_string(i * 4);
-			}
-			else 
-			{
-				str = NodeIfExp->GetExpressionL()->GetStrName() + "(, %ecx, 4)";
-			}
-			//cout << "str = " << str << endl;
-			WriteOperIf(Fileoutput, str, NodeIfExp->GetExpressionR()->GetStrName(), NodeIfExp->GetStrName(), nameblock);
-		}
+		return;
 	}
+
+	if (NodeNameOne != "ASTOperationBin" && NodeNameTwo != "ASTOperationBin")
+	{
+
+		PreparingTheOperand(RegisterAcum, NodeIfExp->GetExpressionL(), Fileoutput);
+		PreparingTheOperand(RegisterBas, NodeIfExp->GetExpressionR(), Fileoutput);
+
+		Compare(Fileoutput, NodeIfExp->GetStrName(), NameBlock);
+	}
+
+	if (NodeNameTwo == "ASTOperationBin")
+	{
+		StartArithmeticGeneration(NodeIfExp->GetExpressionR(), Fileoutput);
+		Fileoutput << "\tpushl %eax" << endl;
+
+		ProcessingOperandIf(NodeNameOne, RegisterAcum, NodeIfExp->GetExpressionL(), Fileoutput);
+		Fileoutput << "\tpopl %eax" << endl;
+		Fileoutput << "\tpopl %ebx" << endl << endl;
+	}
+	else if (NodeNameOne == "ASTOperationBin")
+	{
+		ProcessingOperandIf(NodeNameTwo, RegisterBas, NodeIfExp->GetExpressionR(), Fileoutput);
+		Fileoutput << "\tpushl %ebx" << endl;
+
+		StartArithmeticGeneration(NodeIfExp->GetExpressionL(), Fileoutput);
+		Fileoutput << "\tpopl %eax" << endl;
+		Fileoutput << "\tpopl %ebx" << endl << endl;
+	}
+
+	Compare(Fileoutput, NodeIfExp->GetStrName(), NameBlock);
 }
 
-void GenerationCod::ifPass(unique_ptr<AST> const &NodeIf, ofstream &Fileoutput, string scope)
+void GenerationCod::IfTraversal(unique_ptr<AST> const &NodeIf, ofstream &Fileoutput, string Scope)
 {
 	//Прочесть условие
 	//cmpl op2, op1
@@ -235,188 +231,78 @@ void GenerationCod::ifPass(unique_ptr<AST> const &NodeIf, ofstream &Fileoutput, 
 	string NodeName = typeid(*NodeIf->GetExpressionL()).name();
 	RedactionString(NodeName);
 
+	//Зануление регистров перед использованием
 	Fileoutput << "\txorl %eax, %eax" << endl;
 	Fileoutput << "\txorl %ebx, %ebx" << endl << endl;
 
-	if (NodeName == "ASTDigit")
-	{
-		Fileoutput << "\tmovl $" << NodeIf->GetExpressionL()->GetStrName() << ", %eax" << endl; // op1
-		Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-		Fileoutput << "\tcmp %ebx, %eax" << endl;
-		Fileoutput << "\tjng blocif" << scope << endl << endl;
-	}
-	else if (NodeName == "ASTIdentifier")
-	{
-		Fileoutput << "\tmovl " << NodeIf->GetExpressionL()->GetStrName() << ", %eax" << endl; // op1
-		Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-		Fileoutput << "\tcmp %ebx, %eax" << endl;
-		Fileoutput << "\tjng blocif" << scope << endl << endl;
-	}
-	else if (NodeName == "ASTArray")
+	//Проверка условия If
+	if (NodeName != "ASTOperationBin")
 	{ 
-		string str = typeid(*NodeIf->GetExpressionL()->GetIndex()[0]).name();
-		RedactionString(str);
+		string RegisterAcum = "%eax";
 
-		if (str == "ASTDigit")
-		{
-			int i = atoi(NodeIf->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			Fileoutput << "\tmovl " << NodeIf->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
-			Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-			Fileoutput << "\tcmp %ebx, %eax" << endl;
-			Fileoutput << "\tjng blocif" << scope << endl << endl;
-		}
-		else 
-		{
-			Fileoutput << "\tmovl " << NodeIf->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
-			Fileoutput << "movl " << NodeIf->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
-			Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-			Fileoutput << "\tcmp %ebx, %eax" << endl;
-			Fileoutput << "\tjng blocif" << scope << endl << endl;	
-		}
+		PreparingTheOperand(RegisterAcum, NodeIf->GetExpressionL(), Fileoutput);
+
+		Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
+		Fileoutput << "\tcmp %ebx, %eax" << endl;
+		Fileoutput << "\tjng blocif_" << Scope << endl << endl;
 	}
-	else if (NodeName == "ASTOperationBin")
+	else
 	{
-		string nameblock = "blocif" + scope;
-		ExprIF(NodeIf->GetExpressionL(), Fileoutput, nameblock);
+		string NameBlock = "blocif_" + Scope;
+		ExpressionIF(NodeIf->GetExpressionL(), Fileoutput, NameBlock);
 	}
 
-	//cout << "Bodyif: size = " << NodeIf->GetChild().size() << endl;
 	FunBodyPass(NodeIf, Fileoutput);
 	
-	Fileoutput << "blocif" << scope << ":" << endl;
+	Fileoutput << "blocif_" << Scope << ":" << endl;
 }
 
-void GenerationCod::whilePass(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput, string scope)
+void GenerationCod::WhileTraversal(unique_ptr<AST> const &NodeWhile, ofstream &Fileoutput, string Scope)
 {
-	string NodeName = typeid(*NodeOper->GetExpressionL()).name();
+	string NodeName = typeid(*NodeWhile->GetExpressionL()).name();
 	RedactionString(NodeName);
 
 	Fileoutput << "\txorl %eax, %eax" << endl;
 	Fileoutput << "\txorl %ebx, %ebx" << endl << endl;
 
-	if (NodeName == "ASTDigit")
+	if (NodeName != "ASTOperationBin")
 	{
-		Fileoutput << "\tmovl $" << NodeOper->GetExpressionL()->GetStrName() << ", %eax" << endl; // op1
+		string RegisterAcum = "%eax";
+
+		PreparingTheOperand(RegisterAcum, NodeWhile->GetExpressionL(), Fileoutput);
+
 		Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
 		Fileoutput << "\tcmp %ebx, %eax" << endl;
-		Fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
+		Fileoutput << "\tjng else_blockWhile_" << Scope << endl << endl;
 	}
-	else if (NodeName == "ASTIdentifier")
+	else
 	{
-		Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << ", %eax" << endl; // op1
+		string NameBlock = "else_blockWhile_" + Scope;
+		ExpressionIF(NodeWhile->GetExpressionL(), Fileoutput, NameBlock);
+	}
+
+	Fileoutput << "if_blockWhile_" << Scope << ":" << endl;
+
+	FunBodyPass(NodeWhile, Fileoutput);
+
+	if (NodeName != "ASTOperationBin")
+	{
+		string RegisterAcum = "%eax";
+
+		PreparingTheOperand(RegisterAcum, NodeWhile->GetExpressionL(), Fileoutput);
+
 		Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
 		Fileoutput << "\tcmp %ebx, %eax" << endl;
-		Fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
+		Fileoutput << "\tjng else_blockWhile_" << Scope << endl << endl;
 	}
-	else if (NodeName == "ASTArray")
+	else
 	{
-		string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
-		RedactionString(str);
-		if (str == "ASTDigit")
-		{
-			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
-			Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-			Fileoutput << "\tcmp %ebx, %eax" << endl;
-			Fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
-		}
-		else 
-		{
-			Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
-			Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
-			Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-			Fileoutput << "\tcmp %ebx, %eax" << endl;
-			Fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
-		}
-	}
-	else if (NodeName == "ASTOperationBin")
-	{
-		string nameblock = "else_blockWhile_" + scope;
-		ExprIF(NodeOper->GetExpressionL(), Fileoutput, nameblock);
+		string NameBlock = "else_blockWhile_" + Scope;
+		ExpressionIF(NodeWhile->GetExpressionL(), Fileoutput, NameBlock);
 	}
 
-	Fileoutput << "if_blockWhile_" << scope << ":" << endl;
-
-	//cout << "Bodyif: size = " << NodeOper->GetChild().size() << endl;
-	FunBodyPass(NodeOper, Fileoutput);
-
-	if (NodeName == "ASTDigit")
-	{
-		Fileoutput << "\tmovl $" << NodeOper->GetExpressionL()->GetStrName() << ", %eax" << endl; // op1
-		Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-		Fileoutput << "\tcmp %ebx, %eax" << endl;
-		Fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
-	}
-	else if (NodeName == "ASTIdentifier")
-	{
-		Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << ", %eax" << endl; // op1
-		Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-		Fileoutput << "\tcmp %ebx, %eax" << endl;
-		Fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
-	}
-	else if (NodeName == "ASTArray")
-	{
-		string str = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
-		RedactionString(str);
-		if (str == "ASTDigit")
-		{
-			int i = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
-			Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "+" << i * 4 << ", %eax" << endl;// op1
-			Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-			Fileoutput << "\tcmp %ebx, %eax" << endl;
-			Fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
-		}
-		else 
-		{
-			Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
-			Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetStrName() << "(, %ecx, 4), %eax" << endl;
-			Fileoutput << "\tmovl $0, %ebx" << endl << endl; //op2
-			Fileoutput << "\tcmp %ebx, %eax" << endl;
-			Fileoutput << "\tjng else_blockWhile_" << scope << endl << endl;
-		}
-	}
-	else if (NodeName == "ASTOperationBin")
-	{
-		string nameblock = "else_blockWhile_" + scope;
-		ExprIF(NodeOper->GetExpressionL(), Fileoutput, nameblock);
-	}
-
-	Fileoutput << "\tjmp if_blockWhile_" << scope << endl;
-	Fileoutput << "else_blockWhile_" << scope << ":" << endl;
-}
-
-bool GenerationCod::FunBodyPass(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput)
-{
-	int index = 0;
-
-	if (!NodeBodyFun->GetChild().empty())
-	{
-		while (index < NodeBodyFun->GetChild().size())
-		{
-			string NodeName = typeid(*NodeBodyFun->GetChild()[index]).name();
-			RedactionString(NodeName);//Строка приводится в годное состояние
-			//cout << "Inside " << NodeName << " FunBodyPass: " << NodeName << endl;
-			if (NodeName == "ASTIdentifier" && NodeBodyFun->GetChild()[index]->GetExpressionL() != nullptr && (NodeBodyFun->GetChild()[index]->GetExpressionL()->GetStrName() == "Write" 
-				|| NodeBodyFun->GetChild()[index]->GetExpressionL()->GetStrName() == "WriteLine"))
-			{
-				CallPrintf(NodeBodyFun->GetChild()[index]->GetExpressionL(), Fileoutput);//вывод
-			}
-			else if (NodeName == "ASTOperationBin")//Проверка семантики операций
-			{
-				StartArithmeticGeneration(NodeBodyFun->GetChild()[index], Fileoutput);//арифметика
-			}
-			else if (NodeName == "ASTWhile")//Проверка семантики блока while
-			{
-				whilePass(NodeBodyFun->GetChild()[index], Fileoutput, NodeBodyFun->GetChild()[index]->GetExpressionL()->GetScope());
-			}
-			else if (NodeName == "ASTIf")//Проверка семантики блока if
-			{
-				ifPass(NodeBodyFun->GetChild()[index], Fileoutput, NodeBodyFun->GetChild()[index]->GetExpressionL()->GetScope());
-			}
-			index++;
-		}
-	}
-	return true;
+	Fileoutput << "\tjmp if_blockWhile_" << Scope << endl;
+	Fileoutput << "else_blockWhile_" << Scope << ":" << endl;
 }
 
 void GenerationCod::CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileoutput)
@@ -457,7 +343,7 @@ void GenerationCod::CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileout
 
 	//while (i < CallPrn->GetArgs().size())
 	//{
-	//	Fileoutput << "\tpushl " + CallPrn->GetArgs()[index] << endl;
+	//	Fileoutput << "\tpushl " + CallPrn->GetArgs()[IndexChildAST] << endl;
 	//	Fileoutput << "\tpushl " + "format_l" << endl;
 	//}
 	
@@ -507,7 +393,7 @@ void GenerationCod::WriteData(map<string, vector<ScopeVar>> &Table, ofstream &Fi
 	}
 }
 
-void GenerationCod::WriteOper(ofstream &Fileoutput, string OperandIdL, string Operator)
+void GenerationCod::Operation(ofstream &Fileoutput, string OperandIdL, string Operator)
 {
 
 	if (Operator == "=")
@@ -536,6 +422,14 @@ void GenerationCod::WriteOper(ofstream &Fileoutput, string OperandIdL, string Op
 void GenerationCod::StartArithmeticGeneration(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput)
 {
 	string OperationName = NodeOper->GetStrName();
+
+	cout << "OperationName: " << OperationName << endl;
+	if (NodeOper->GetExpressionL() == nullptr)
+	{
+		return;
+	}
+	cout << "Left is good!" << endl;
+
 	string NodeNameOne = typeid(*NodeOper->GetExpressionL()).name();
 	string NodeNameTwo;
 	RedactionString(NodeNameOne);//Строка приводится в годное состояние
@@ -661,7 +555,7 @@ void GenerationCod::ArithmeticGeneration(unique_ptr<AST> const &NodeOper, ofstre
 	}
 
 	Fileoutput << "\txorl %eax, %eax" << endl;
-	Fileoutput << "\txorl %ebx, %ebx" << endl;
+	Fileoutput << "\txorl %ebx, %ebx" << endl << endl;
 
 	// Если достигли узла, где слева и справа узлы не являются узлами операций, генерируем ассемблерный код
 	if (NodeNameTwo != "ASTOperationBin" && NodeNameOne != "ASTOperationBin")
@@ -701,7 +595,7 @@ void GenerationCod::ArithmeticGeneration(unique_ptr<AST> const &NodeOper, ofstre
 	// Выполнение операций между ac и bas
 	
 	if (NodeNameOne != "ASTArray")
-		WriteOper(Fileoutput, OperandIdL, OperationName);
+		Operation(Fileoutput, OperandIdL, OperationName);
 	else 
 	{
 		string NodeArrayIndex = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
@@ -716,7 +610,7 @@ void GenerationCod::ArithmeticGeneration(unique_ptr<AST> const &NodeOper, ofstre
 		{
 			OperandIdL = OperandIdL + "(, %ecx, 4)"; 
 		}
-		WriteOper(Fileoutput, OperandIdL,  OperationName);
+		Operation(Fileoutput, OperandIdL,  OperationName);
 	}
 
 	Fileoutput << "\tpushl %eax" << endl;
@@ -758,7 +652,7 @@ void GenerationCod::PreparingTheOperand(string Register, unique_ptr<AST> const &
 		Fileoutput << OperandId << ", " << Register << endl;
 
 	}
-	else if (NodeName == "ASTIdentifier")
+	else
 	{
 		string NodeArrayIndex = typeid(*NodeOperand->GetIndex()[0]).name();
 		RedactionString(NodeArrayIndex);
@@ -790,7 +684,7 @@ void GenerationCod::OperationIdToId(unique_ptr<AST> const &NodeOper, ofstream &F
 	PreparingTheOperand(RegisterBas, NodeOper->GetExpressionR(), Fileoutput);//Запись правого операнда в %ebx
 
 	if (NodeNameOne != "ASTArray")
-		WriteOper(Fileoutput, OperandIdL, OperationName);
+		Operation(Fileoutput, OperandIdL, OperationName);
 	else 
 	{
 		string NodeArrayIndex = typeid(*NodeOper->GetExpressionL()->GetIndex()[0]).name();
@@ -805,6 +699,6 @@ void GenerationCod::OperationIdToId(unique_ptr<AST> const &NodeOper, ofstream &F
 		{
 			OperandIdL = OperandIdL + "(, %ecx, 4)"; 
 		}
-		WriteOper(Fileoutput, OperandIdL, OperationName);
+		Operation(Fileoutput, OperandIdL, OperationName);
 	}
 }

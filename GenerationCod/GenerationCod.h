@@ -5,23 +5,30 @@ class GenerationCod
 	string Way;
 public:
 	void StartGenerationCod(vector<unique_ptr<AST>> const &VectorClass, map<string, vector<ScopeVar>> &Table, int option);
-	bool ClassPass(unique_ptr<AST> const &NodeClass, ofstream &Fileoutput);
-	bool FunBodyPass(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput);
+	void ClassTraversal(unique_ptr<AST> const &NodeClass, ofstream &Fileoutput);
+	void FunBodyPass(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput);
 	void CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileoutput);
 	void WriteData(map<string, vector<ScopeVar>> &Table, ofstream &Fileoutput);
-	void WriteOper(ofstream &Fileoutput, string OperandIdL, string Operator);
-	void ifPass(unique_ptr<AST> const &NodeIf, ofstream &Fileoutput, string scope);
-	void ExprIF(unique_ptr<AST> const &NodeIfExp, ofstream &Fileoutput, string nameblock);
-	void WriteOperIf(ofstream &Fileoutput, string NodeNameOne, string NodeNameTwo, string op, string nameblock);
-	void whilePass(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput, string scope);
+
+	void Operation(ofstream &Fileoutput, string OperandIdL, string Operator);
+	void Compare(ofstream &Fileoutput, string op, string NameBlock);
 	
+	//Арифметика
 	void StartArithmeticGeneration(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput);
 	void Scanf(string NodeNameOne, unique_ptr<AST> const &NodeOper, ofstream &Fileoutput);
 	void UnaryOperations(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput);
 	void ArithmeticGeneration(unique_ptr<AST> const &NodeAST, ofstream &Fileoutput);
 	void OperandProcessing(string OperandOne, string OperandTwo, unique_ptr<AST> const &PtrNodeOperandOne, unique_ptr<AST> const &PtrNodeOperandTwo, ofstream &Fileoutput);
-	void PreparingTheOperand(string Register, unique_ptr<AST> const &NodeOperand, ofstream &Fileoutput);
+	void PreparingTheOperand(string Register, unique_ptr<AST> const &NodeOperand, ofstream &);
 	void OperationIdToId(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput);
+
+	//Блок If
+	void IfTraversal(unique_ptr<AST> const &NodeIf, ofstream &Fileoutput, string Scope);
+	void ExpressionIF(unique_ptr<AST> const &NodeIfExp, ofstream &Fileoutput, string NameBlock);
+	void ProcessingOperandIf(string NodeName, string Register, unique_ptr<AST> const &NodeExp, ofstream &Fileoutput);
+
+	//Блок While
+	void WhileTraversal(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput, string Scope);
 
 	GenerationCod(string FileWay) 
 	{
