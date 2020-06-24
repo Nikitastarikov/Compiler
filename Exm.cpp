@@ -87,12 +87,18 @@ int main(int argn, char **argv) {
 	ExamplePars.Parsing(VectorToken, VectorToken.size(), Options[1]);
 
 	//Semantica
-	SemanticAnalysis ExampleSemantic;
- 	ExampleSemantic.SemanticAnalysisStart(ExamplePars.GetRootVector() , ExamplePars.GetTable());
-
- 	//GenerationCod
- 	GenerationCod ExampleGenCod(Way);
- 	ExampleGenCod.StartGenerationCod(ExamplePars.GetRootVector() , ExamplePars.GetTable(), Options[2]);
+	if (!ExamplePars.GetFlagError())
+	{
+		SemanticAnalysis ExampleSemantic;
+	 	
+	 	if (ExampleSemantic.SemanticAnalysisStart(ExamplePars.GetRootVector() , ExamplePars.GetTable()))
+	 	{
+		 	//GenerationCod
+		 	Line = "proga.s";
+		 	GenerationCod ExampleGenCod(Way);
+		 	ExampleGenCod.StartGenerationCod(ExamplePars.GetRootVector() , ExamplePars.GetTable(), Options[2], Line);
+	 	}
+ 	}
 
 	return 0;
 }

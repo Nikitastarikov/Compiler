@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void GenerationCod::StartGenerationCod(vector<unique_ptr<AST>> const &VectorClass, map<string, vector<ScopeVar>> &Table, int option)
+void GenerationCod::StartGenerationCod(vector<unique_ptr<AST>> const &VectorClass, map<string, vector<ScopeVar>> &Table, int option, string File)
 {
 	int IndexChildAST = 0;
 
@@ -14,7 +14,7 @@ void GenerationCod::StartGenerationCod(vector<unique_ptr<AST>> const &VectorClas
 	
 	//Создание файла, в который будет записываться программа на ассемблер
 	//ofstream Fileoutput(Way, ios::out);
-	ofstream Fileoutput("proga.s", ios::out);
+	ofstream Fileoutput(File, ios::out);
 	if (!Fileoutput)
 	{
 		Fileoutput.close();
@@ -60,20 +60,20 @@ void GenerationCod::StartGenerationCod(vector<unique_ptr<AST>> const &VectorClas
 	string Line;
 	if (option)
 	{
-		ifstream fileinput(/*"ProgrammForTest/Dop/search.cs"*/ "proga.s", ios::in);
-		if (!fileinput) 
+		ifstream Fileinput(/*"ProgrammForTest/Dop/search.cs"*/ File, ios::in);
+		if (!Fileinput) 
 		{
-			fileinput.close();
+			Fileinput.close();
 			cerr << "Fileinput open error" << endl;
 			return;
 		}
 		cout << "Assembler:" << endl << endl;
-		while (!fileinput.eof()) 
+		while (!Fileinput.eof()) 
 		{
-			getline(fileinput, Line);
+			getline(Fileinput, Line);
 			cout << Line << endl;
 		}
-		fileinput.close();
+		Fileinput.close();
 	}
 }
 
@@ -423,12 +423,12 @@ void GenerationCod::StartArithmeticGeneration(unique_ptr<AST> const &NodeOper, o
 {
 	string OperationName = NodeOper->GetStrName();
 
-	cout << "OperationName: " << OperationName << endl;
+	//cout << "OperationName: " << OperationName << endl;
 	if (NodeOper->GetExpressionL() == nullptr)
 	{
 		return;
 	}
-	cout << "Left is good!" << endl;
+	//cout << "Left is good!" << endl;
 
 	string NodeNameOne = typeid(*NodeOper->GetExpressionL()).name();
 	string NodeNameTwo;
@@ -460,7 +460,7 @@ void GenerationCod::UnaryOperations(unique_ptr<AST> const &NodeOper, ofstream &F
 	string NodeNameOne = typeid(*NodeOper->GetExpressionL()).name();
 	string OperandIdL = NodeOper->GetExpressionL()->GetStrName();
 	RedactionString(NodeNameOne);
-	cout << "UnaryOperations" << endl;
+	//cout << "UnaryOperations" << endl;
 
 	if (NodeNameOne == "ASTIdentifier")
 	{
@@ -561,11 +561,11 @@ void GenerationCod::ArithmeticGeneration(unique_ptr<AST> const &NodeOper, ofstre
 	if (NodeNameTwo != "ASTOperationBin" && NodeNameOne != "ASTOperationBin")
 	{
 
-		cout << "OperationIdToId: " << OperandIdL << OperationName << OperandIdR << endl;
+		//cout << "OperationIdToId: " << OperandIdL << OperationName << OperandIdR << endl;
 
 		OperationIdToId(NodeOper, Fileoutput);
 		//OperationGeneration(NodeNameOne, NodeNameTwo, Operator);
-		Fileoutput << "\tpush %eax" << endl; // Результат сохраняется в стек
+		Fileoutput << "\tpushl %eax" << endl; // Результат сохраняется в стек
 
 		return;
 	}

@@ -1,10 +1,11 @@
 #include "../Semantic/Semantica.h"
+#include <string>
 
 class GenerationCod
 {
 	string Way;
 public:
-	void StartGenerationCod(vector<unique_ptr<AST>> const &VectorClass, map<string, vector<ScopeVar>> &Table, int option);
+	void StartGenerationCod(vector<unique_ptr<AST>> const &VectorClass, map<string, vector<ScopeVar>> &Table, int option, string File);
 	void ClassTraversal(unique_ptr<AST> const &NodeClass, ofstream &Fileoutput);
 	void FunBodyPass(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput);
 	void CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileoutput);

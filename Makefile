@@ -7,10 +7,11 @@ CC = g++ -std=c++11 -o
 BUILD_TESTE_LEXER = build/TestLex.o
 BUILD_TESTE_PARSER = build/TestPars.o
 BUILD_TESTE_SEMANTIC = build/TestSem.o
+BUILD_TESTE_CODGEN = build/TestCodGen.o
 CFLAGS = -g3
 ARGS ?= default_args
 
-all: clean Compiler TestLexer TestParser TestSemantic
+all: clean Compiler TestLexer TestParser TestSemantic TestCodGen
 
 Compiler: build $(LO) $(PO) $(SO) $(GCO) $(EO)
 	$(CC) Compiler $(LO) $(PO) $(SO) $(GCO) $(EO) $(CFLAGS) 
@@ -51,6 +52,13 @@ TestSemantic: $(BUILD_TESTE_SEMANTIC) $(LO) $(PO) $(SO)
 build/TestSem.o: Tests/TestSem.cpp
 	$(CC) $(BUILD_TESTE_SEMANTIC) -c Tests/TestSem.cpp
 
+TestCodGen: $(BUILD_TESTE_CODGEN) $(LO) $(PO) $(SO) $(GCO)
+	$(CC) TestCodGen $(BUILD_TESTE_CODGEN) $(LO) $(PO) $(SO) $(GCO)
+
+build/TestCodGen.o: Tests/TestSem.cpp
+	$(CC) $(BUILD_TESTE_CODGEN) -c Tests/TestCodGen.cpp
+
+
 run: ccomp scomp
 
 build:
@@ -64,4 +72,4 @@ scomp:
 
 .PHONY: run clean
 clean:
-	rm -rf build/*.o Compiler proga.s proga TestLexer TestParser TestSemantic
+	rm -rf build/*.o Compiler proga.s proga TestLexer TestParser TestSemantic TestCodGen
