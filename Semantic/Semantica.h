@@ -21,7 +21,7 @@ public:
 	bool CheckingClassSemantics(unique_ptr<AST> const &NodeClass, map<string, vector<ScopeVar>> &Table);
 	bool CheckingBodyFunSemantics(unique_ptr<AST> const &NodeBodyFun, map<string, vector<ScopeVar>> &Table, string ReturnType);
 	bool CheckSemanticArray(unique_ptr<AST> const &NodeArray, map<string, vector<ScopeVar>> &Table);
-	bool CallArrayElement(unique_ptr<AST> const &NodeArray, map<string, vector<ScopeVar>> &Table, string NodeName, string str);
+	bool CallArrayElement(unique_ptr<AST> const &NodeArray, map<string, vector<ScopeVar>> &Table, string NodeName, string String);
 	bool CallStringElement(unique_ptr<AST> const &NodeArray, map<string, vector<ScopeVar>> &Table);
 	bool StartCheckSemanticOperation(unique_ptr<AST> const &NodeOper, map<string, vector<ScopeVar>> &Table);
 	bool CheckSemanticOperation(unique_ptr<AST> const &NodeOperation, map<string, vector<ScopeVar>> &Table);
@@ -33,19 +33,15 @@ public:
 	bool CheckSemanticIf(unique_ptr<AST> const &NodeIf, map<string, vector<ScopeVar>> &Table, string ReturnType);
 	bool CheckSemanticLocalFun(unique_ptr<AST> const &NodeLocalFun, map<string, vector<ScopeVar>> &Table, string ReturnType);
 	bool CheckSemanticCallFun(unique_ptr<AST> const &NodeCallFun, map<string, vector<ScopeVar>> &Table);
-	bool CheckCallFunArguments(unique_ptr<AST> const &NodeCallFun, map<string, vector<ScopeVar>> &Table, AST* const ptr, string str);
+	bool CheckCallFunArguments(unique_ptr<AST> const &NodeCallFun, map<string, vector<ScopeVar>> &Table, AST* const PtrNode, string NodeName);
 	bool CheckSemanticId(unique_ptr<AST> const &NodeSubBlock, map<string, vector<ScopeVar>> &Table);
 	bool CheckTwoTypes(string TypeOne, string TypeTwo);
-	string CheckIdTableSymbol(string name, string scope, string type, map<string, vector<ScopeVar>> &Table, string NodeType);
-	string CheckIdName(vector<ScopeVar> &it, string name, string NodeType);
-	AST* const /*&*/SearchFunctionOrArrayDefinition(string name, string scope, string type, map<string, vector<ScopeVar>> &Table, string NodeType);
+	string CheckIdTableSymbol(string Name, string Scope, string Type, map<string, vector<ScopeVar>> &Table, string NodeType);
+	string CheckIdName(vector<ScopeVar> &it, string Name, string NodeType);
+	AST* const /*&*/SearchFunctionOrArrayDefinition(string Name, string Scope, string Type, map<string, vector<ScopeVar>> &Table, string NodeType);
 
-	//friend class Parser;
-	// Âûâîä îøèáêè
 	void SemError(string Error)
 	{
 		cout << "Semantic error: " << Error << endl;
 	}
 };
-
-// Çàïóñê ïðîâåðêè ñåìàíòèêè

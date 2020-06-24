@@ -25,10 +25,11 @@ std::ostream& operator << (std::ostream& os, const Token::Words& kind)
 
 void Lexer::CharacterReadModeTwo(string const &Line, int LineNumber, vector<unique_ptr<Token>> &VectorToken, int &IdentifierString, int Size)
 {
-	unique_ptr<Token> ob(new Token());
+	unique_ptr<Token> TokenObject(new Token());
 	unique_ptr<Token> doubleduote(new Token());
 	int SizeSubLine = 1;
 	int TemporaryIdentifierString = IdentifierString + 1;
+
 	while (Line[TemporaryIdentifierString] != '"' && TemporaryIdentifierString < Size - 1)
 	{
 		TemporaryIdentifierString++;
@@ -37,80 +38,95 @@ void Lexer::CharacterReadModeTwo(string const &Line, int LineNumber, vector<uniq
 
 	if (Line[TemporaryIdentifierString] == '"')
 	{
-		ob->SetTypeToken(Token::Words::String);
-		ob->SetString(Line.substr(IdentifierString, SizeSubLine + 1));
+		TokenObject->SetTypeToken(Token::Words::String);
+		TokenObject->SetString(Line.substr(IdentifierString, SizeSubLine + 1));
 		//cout << "Loc<" << LineNumber << ":" << (TemporaryIdentifierString + 1) << "> " << doubleduote->GetTypeToken() << " '" << doubleduote->GetString() << "'" << endl;
 	}
 	else
 	{
-		ob->SetTypeToken(Token::Words::Unexpected);
-		ob->SetString(Line.substr(IdentifierString, SizeSubLine));
+		TokenObject->SetTypeToken(Token::Words::Unexpected);
+		TokenObject->SetString(Line.substr(IdentifierString, SizeSubLine));
 	}
 	
-	ob->SetStrNumber(LineNumber);
-	ob->SetColNumber(IdentifierString + 1);
-	//cout << "Loc<" << LineNumber << ":" << (IdentifierString + 1) << "> " << ob->GetTypeToken() << " '" << ob->GetString() << "'" << endl;
+	TokenObject->SetStrNumber(LineNumber);
+	TokenObject->SetColNumber(IdentifierString + 1);
+	//cout << "Loc<" << LineNumber << ":" << (IdentifierString + 1) << "> " << TokenObject->GetTypeToken() << " '" << TokenObject->GetString() << "'" << endl;
 	IdentifierString = TemporaryIdentifierString;
 	CharacterReadMode = 0;
-	if (ob != nullptr && ob->GetString() != "")
-		VectorToken.push_back(move(ob));
+
+	if (TokenObject != nullptr && TokenObject->GetString() != "")
+		VectorToken.push_back(move(TokenObject));
 }
 
 void Lexer::UnexpectedToken(string const &Line, int LineNumber, vector<unique_ptr<Token>> &VectorToken, int &IdentifierString, int Size)
 {
-	unique_ptr<Token> ob(new Token());
+	unique_ptr<Token> TokenObject(new Token());
 	int SizeSubLine = 1;
 	int TemporaryIdentifierString = IdentifierString;
-	while (TemporaryIdentifierString < Size - 1 && !isspace(Line[TemporaryIdentifierString]) && Line[TemporaryIdentifierString] != ';')
+	while (TemporaryIdentifierString < Size - 1 && !IsSpace(Line[TemporaryIdentifierString]) && Line[TemporaryIdentifierString] != ';')
 	{
 		TemporaryIdentifierString++;
 		SizeSubLine++;
 	}
 
-	ob->SetTypeToken(Token::Words::Unexpected);
-	ob->SetStrNumber(LineNumber);
-	ob->SetColNumber(IdentifierString + 1);
-	ob->SetString(Line.substr(IdentifierString, SizeSubLine - 1));
-	if (ob != nullptr && ob->GetString() != "")
+	TokenObject->SetTypeToken(Token::Words::Unexpected);
+	TokenObject->SetStrNumber(LineNumber);
+	TokenObject->SetColNumber(IdentifierString + 1);
+	TokenObject->SetString(Line.substr(IdentifierString, SizeSubLine - 1));
+
+	if (TokenObject != nullptr && TokenObject->GetString() != "")
 	{
-		//cout << TemporaryIdentifierString << "/" << SizeSubLine << endl;
-		//cout << "Loc<" << LineNumber << ":" << ob->GetColNum() << "> " << ob->GetTypeToken() << " '" << ob->GetString() << "'" << endl;
-		VectorToken.push_back(move(ob));
+		//cout << "Loc<" << LineNumber << ":" << TokenObject->GetColNum() << "> " << TokenObject->GetTypeToken() << " '" << TokenObject->GetString() << "'" << endl;
+		VectorToken.push_back(move(TokenObject));
 	}
 	IdentifierString = TemporaryIdentifierString - 1;// отступает на индекс назад, чтобы корректно прочитать следующий токен
 }
 
-void Lexer::CheckOb(unique_ptr<Token> ob, string const &Line, int LineNumber, vector<unique_ptr<Token>> &VectorToken, int &IdentifierString, int Size)
+void Lexer::CheckOb(unique_ptr<Token> TokenObject, string const &Line, int LineNumber, vector<unique_ptr<Token>> &VectorToken, int &IdentifierString, int Size)
 {
-	if (ob != nullptr && ob->GetString() != "")
-		VectorToken.push_back(move(ob));
-	else 
+	if (TokenObject != nullptr && TokenObject->GetString() != "")
+	{
+		VectorToken.push_back(move(TokenObject));
+	}
+	else
+	{ 
 		UnexpectedToken(Line, LineNumber, VectorToken, IdentifierString, Size);
+	}
 }
 
 void Lexer::GetNextToken(string Line, int LineNumber, int EndFileId, vector<unique_ptr<Token>> &VectorToken) 
 {
 	
-	int IdentifierString = 0;
-	int Size = (int)Line.size();
-	CharacterReadMode = 0;
+	int IdentifierString = 0;//Идентификатор строки
+	int Size = (int)Line.size();//Получаем размер строки, которую собираемся обрабатывать
+	CharacterReadMode = 0;// Флаг для проверки наличия ковычек
 
-	if (EndFileId) 
+	if (Line == "")
 	{
-		unique_ptr<Token> ob(new Token());
-		ob->SetTypeToken(Token::Words::End);
-		ob->SetString("\0");
-		ob->SetStrNumber(LineNumber);
-		ob->SetColNumber(1);
+		unique_ptr<Token> TokenObject(new Token());
+		TokenObject->SetTypeToken(Token::Words::Unexpected);
+		TokenObject->SetStrNumber(LineNumber);
+		TokenObject->SetColNumber(1);
+		TokenObject->SetString("");
+		VectorToken.push_back(std::move(TokenObject));
+	}
+
+	if (EndFileId)// Проверка конца файла
+	{
+		unique_ptr<Token> TokenObject(new Token());
+		TokenObject->SetTypeToken(Token::Words::End);
+		TokenObject->SetString("\0");
+		TokenObject->SetStrNumber(LineNumber);
+		TokenObject->SetColNumber(1);
 		//cout << "Loc<" << LineNumber << ":" << 1 << "> " << ob->GetTypeToken() << " '" << ob->GetString() << "'" << endl;
-		VectorToken.push_back(std::move(ob));
+		VectorToken.push_back(std::move(TokenObject));
 	}
 	else 
 	{
 		//cout << LineNumber << " line size = " << Line.size() << endl;
 		while (IdentifierString < Size) 
 		{
-			while (CharacterReadMode != 2 && isspace(Line[IdentifierString])) IdentifierString++;
+			while (CharacterReadMode != 2 && IsSpace(Line[IdentifierString])) IdentifierString++;
 
 			if (CharacterReadMode == 2)
 			{
@@ -119,27 +135,29 @@ void Lexer::GetNextToken(string Line, int LineNumber, int EndFileId, vector<uniq
 			}
 			else if (strchr("+-/*%&|=()[]{}<>;,.", Line[IdentifierString])) 
 			{
-				auto ob = WordZnak(Line, LineNumber, Size, IdentifierString);
-				if (ob != nullptr && ob->GetString() != "")
-					VectorToken.push_back(move(ob));
+				auto TokenObject = ReadOperator(Line, LineNumber, Size, IdentifierString);
+				if (TokenObject != nullptr && TokenObject->GetString() != "")
+					VectorToken.push_back(move(TokenObject));
 			}
 			else if (Size - 1 == IdentifierString);
-			else if (isletter(Line[IdentifierString])) 
+			else if (IsLetter(Line[IdentifierString])) 
 			{
-				CheckOb(WordString(Line, LineNumber, Size, IdentifierString), Line, LineNumber, VectorToken, IdentifierString, Size);
+				auto TokenObject = ReadString(Line, LineNumber, Size, IdentifierString);
+				CheckOb(move(TokenObject), Line, LineNumber, VectorToken, IdentifierString, Size);
 			}
-			else if (isdigit(Line[IdentifierString])) 
+			else if (IsDigit(Line[IdentifierString])) 
 			{
-				CheckOb(WordDigit(Line, LineNumber, IdentifierString, Size), Line, LineNumber, VectorToken, IdentifierString, Size);
+				auto TokenObject = ReadNumber(Line, LineNumber, IdentifierString, Size);
+				CheckOb(move(TokenObject), Line, LineNumber, VectorToken, IdentifierString, Size);
 			}
 			else if (Line[IdentifierString] == '\"') 
 			{ 
-				//cout << "Loc<" << LineNumber << ":" << (IdentifierString + 1) << "> " << ob->GetTypeToken() << " '" << '\"' << "'" << endl;
 				CharacterReadMode = 2; 
 			}
 			else if (Line[IdentifierString] == '\'')
 			{
-				CheckOb(isSymbol(Line, LineNumber, IdentifierString, Size), Line, LineNumber, VectorToken, IdentifierString, Size);
+				auto TokenObject = IsSymbol(Line, LineNumber, IdentifierString, Size);
+				CheckOb(move(TokenObject), Line, LineNumber, VectorToken, IdentifierString, Size);
 			}
 			else
 			{
@@ -148,11 +166,12 @@ void Lexer::GetNextToken(string Line, int LineNumber, int EndFileId, vector<uniq
 			IdentifierString++;
 		}
 	}
+	//cout << "size = " << VectorToken.size() << endl;
 }
 
-unique_ptr<Token> isSymbol(string &Line, int &LineNumber, int &Identifier, int LineSize)
+unique_ptr<Token> IsSymbol(string &Line, int &LineNumber, int &Identifier, int LineSize)
 {
-	unique_ptr<Token> ob(new Token());
+	unique_ptr<Token> TokenObject(new Token());
 	int SizeSubLine = 3, IndexTemp;
 
 	if (Identifier + 2 > LineSize - 1)
@@ -161,32 +180,39 @@ unique_ptr<Token> isSymbol(string &Line, int &LineNumber, int &Identifier, int L
 	}
 	else if (Line[Identifier + 2] != '\'')
 	{
-		/*IndexTemp = Identifier + 2; 	
-		ob->SetTypeToken(Token::Words::Unexpected);
-		ob->SetString(Line.substr(Identifier, SizeSubLine));*/
 		return nullptr;
 	}
 	else
 	{
 		IndexTemp = Identifier + 2; 	
-		ob->SetTypeToken(Token::Words::Symbol);
-		ob->SetString(Line.substr(Identifier, SizeSubLine));
+		TokenObject->SetTypeToken(Token::Words::Symbol);
+		TokenObject->SetString(Line.substr(Identifier, SizeSubLine));
 	}
 
-	ob->SetStrNumber(LineNumber);
-	ob->SetColNumber(Identifier + 1);
-	//cout << "Loc<" << LineNumber << ":" << (Identifier + 1) << "> " << ob->GetTypeToken() << " '" << ob->GetString() << "'" << endl;
+	TokenObject->SetStrNumber(LineNumber);
+	TokenObject->SetColNumber(Identifier + 1);
+	//cout << "Loc<" << LineNumber << ":" << (Identifier + 1) << "> " << TokenObject->GetTypeToken() << " '" << TokenObject->GetString() << "'" << endl;
 
 	Identifier = IndexTemp;
-	return move(ob);
+	return move(TokenObject);
 }
 
-int isletter(char a) 
+int IsSpace(char Symbol)
 {
-	if (('A' <= a && a <= 'Z') || ('a' <= a && a <= 'z') || a == '_') {
+	return isspace(Symbol);
+}
+
+int IsLetter(char Symbol) 
+{
+	if (('A' <= Symbol && Symbol <= 'Z') || ('a' <= Symbol && Symbol <= 'z') || Symbol == '_') {
 		return 1;
 	}
 	return 0;
+}
+
+int IsDigit(char Symbol)
+{
+	return isdigit(Symbol);
 }
 
 bool IsBinary(string const &Line, int &LineIndex, int &SizeSubLine, int LineSize)
@@ -194,6 +220,7 @@ bool IsBinary(string const &Line, int &LineIndex, int &SizeSubLine, int LineSize
 	int TemporaryIdentifier = LineIndex;
 	int TempSizeSubLine = SizeSubLine;
 	int Correctness = 1;
+
 	if (LineSize - LineIndex < 2)
 		return false;
 
@@ -203,11 +230,12 @@ bool IsBinary(string const &Line, int &LineIndex, int &SizeSubLine, int LineSize
 	if (Line[TemporaryIdentifier] != 'b' && Line[TemporaryIdentifier] != 'B')
 		Correctness = 0;
 
-	if (isspace(Line[TemporaryIdentifier]) || !Correctness)
+	if (IsSpace(Line[TemporaryIdentifier]) || !Correctness)
 		return false;
 
 	TemporaryIdentifier++;
 	TempSizeSubLine++;
+
 	while (TemporaryIdentifier < LineSize - 1 && strchr("_01", Line[TemporaryIdentifier])) {
 		TemporaryIdentifier++;
 		TempSizeSubLine++;
@@ -216,7 +244,7 @@ bool IsBinary(string const &Line, int &LineIndex, int &SizeSubLine, int LineSize
 	if (TemporaryIdentifier < LineSize - 1)
 	{
 
-		if (!isletter(Line[TemporaryIdentifier]))
+		if (!IsLetter(Line[TemporaryIdentifier]))
 		{
 			LineIndex = TemporaryIdentifier;
 			SizeSubLine = TempSizeSubLine;
@@ -225,7 +253,7 @@ bool IsBinary(string const &Line, int &LineIndex, int &SizeSubLine, int LineSize
 		else
 			return false;
 	}
-	else if (TemporaryIdentifier == LineSize - 1 && isdigit(Line[TemporaryIdentifier]))
+	else if (TemporaryIdentifier == LineSize - 1 && IsDigit(Line[TemporaryIdentifier]))
 	{
 		LineIndex = TemporaryIdentifier;
 		SizeSubLine = TempSizeSubLine + 1;
@@ -243,16 +271,14 @@ bool IsOctal(string &Line, int &LineIndex, int &SizeSubLine, int LineSize)
 	int TemporaryIdentifier = LineIndex;
 	int TempSizeSubLine = SizeSubLine;
 	int Correctness = 1;
+
 	if (LineSize - LineIndex < 1)
 		return false;
 
-	if (Line[TemporaryIdentifier - 1] != '0')
+	if (Line[TemporaryIdentifier - 1] != '0' || !strchr("1234567", Line[TemporaryIdentifier]))
 		Correctness = 0;
 
-	if (!strchr("1234567", Line[TemporaryIdentifier]))
-		Correctness = 0;
-
-	if (isspace(Line[TemporaryIdentifier]) || !Correctness)
+	if (IsSpace(Line[TemporaryIdentifier]) || !Correctness)
 		return false;
 
 	while (strchr("01234567", Line[TemporaryIdentifier]) && TemporaryIdentifier < LineSize - 1) {
@@ -263,7 +289,7 @@ bool IsOctal(string &Line, int &LineIndex, int &SizeSubLine, int LineSize)
 	if (TemporaryIdentifier < LineSize - 1)
 	{
 
-		if (!isletter(Line[TemporaryIdentifier]))
+		if (!IsLetter(Line[TemporaryIdentifier]))
 		{
 			LineIndex = TemporaryIdentifier;
 			SizeSubLine = TempSizeSubLine;
@@ -272,7 +298,7 @@ bool IsOctal(string &Line, int &LineIndex, int &SizeSubLine, int LineSize)
 		else
 			return false;
 	}
-	else if (TemporaryIdentifier == LineSize - 1 && isdigit(Line[TemporaryIdentifier]))
+	else if (TemporaryIdentifier == LineSize - 1 && IsDigit(Line[TemporaryIdentifier]))
 	{
 		LineIndex = TemporaryIdentifier;
 		SizeSubLine = TempSizeSubLine + 1;
@@ -290,6 +316,7 @@ bool IsHexadecimal(string &Line, int &LineIndex, int &SizeSubLine, int LineSize)
 	int TemporaryIdentifier = LineIndex;
 	int TempSizeSubLine = SizeSubLine;
 	int Correctness = 1;
+
 	if (LineSize - LineIndex < 2)
 		return false;
 
@@ -299,11 +326,12 @@ bool IsHexadecimal(string &Line, int &LineIndex, int &SizeSubLine, int LineSize)
 	if (Line[TemporaryIdentifier] != 'x' && Line[TemporaryIdentifier] != 'X')
 		Correctness = 0;
 	
-	if (isspace(Line[TemporaryIdentifier]) || !Correctness)
+	if (IsSpace(Line[TemporaryIdentifier]) || !Correctness)
 		return false;
 
 	TemporaryIdentifier++;
 	TempSizeSubLine++;
+
 	while (strchr("0123456789abcdefABCDEF", Line[TemporaryIdentifier]) && TemporaryIdentifier < LineSize - 1) {
 		TemporaryIdentifier++;
 		TempSizeSubLine++;
@@ -311,7 +339,7 @@ bool IsHexadecimal(string &Line, int &LineIndex, int &SizeSubLine, int LineSize)
 
 	if (TemporaryIdentifier < LineSize - 1)
 	{
-		if (!isletter(Line[TemporaryIdentifier]))
+		if (!IsLetter(Line[TemporaryIdentifier]))
 		{
 			LineIndex = TemporaryIdentifier;
 			SizeSubLine = TempSizeSubLine;
@@ -320,14 +348,14 @@ bool IsHexadecimal(string &Line, int &LineIndex, int &SizeSubLine, int LineSize)
 		else
 			return false;
 	}
+
 	LineIndex = TemporaryIdentifier;
 	SizeSubLine = TempSizeSubLine + 1;
 	return true;
 }
 
-bool IsDecimalInteger(string &Line, int &LineIndex, int &SizeSubLine, int LineSize, bool &real)
+bool IsDecimalInteger(string &Line, int &LineIndex, int &SizeSubLine, int LineSize, bool &NotInteger)
 {
-	//cout << LineIndex << endl;
 	int TemporaryIdentifier = LineIndex;
 	int TempSizeSubLine = SizeSubLine;
 
@@ -335,49 +363,52 @@ bool IsDecimalInteger(string &Line, int &LineIndex, int &SizeSubLine, int LineSi
 	{
 		TemporaryIdentifier++;
 		TempSizeSubLine++;
-		real = true;
-		if (TemporaryIdentifier == LineSize - 1 || !isdigit(Line[TemporaryIdentifier]))
+		NotInteger = true;
+
+		if (TemporaryIdentifier == LineSize - 1 || !IsDigit(Line[TemporaryIdentifier]))
 		{
 			return false;
 		}
 	}
 
-	while (TemporaryIdentifier < LineSize - 1 && isdigit(Line[TemporaryIdentifier]))
+	while (TemporaryIdentifier < LineSize - 1 && IsDigit(Line[TemporaryIdentifier]))
 	{
-		//cout << Line[TemporaryIdentifier] << endl;
 		TemporaryIdentifier++;
 		TempSizeSubLine++;
-		if (TemporaryIdentifier < LineSize - 1 && Line[TemporaryIdentifier] == '.' && real == false)
+
+		if (TemporaryIdentifier < LineSize - 1 && Line[TemporaryIdentifier] == '.' && NotInteger == false)
 		{
 			TemporaryIdentifier++;
 			TempSizeSubLine++;
-			real = true;
-			if (TemporaryIdentifier == LineSize - 1 || !isdigit(Line[TemporaryIdentifier]))
+			NotInteger = true;
+
+			if (TemporaryIdentifier == LineSize - 1 || !IsDigit(Line[TemporaryIdentifier]))
 			{
 				return false;
 			}
 		}
-		else if (TemporaryIdentifier < LineSize - 1 && Line[TemporaryIdentifier] == '.' && real == true)
+		else if (TemporaryIdentifier < LineSize - 1 && Line[TemporaryIdentifier] == '.' && NotInteger == true)
 		{
 			return false;
 		}
 
 	}
-	//cout << TemporaryIdentifier << endl;
 	
 	if (TemporaryIdentifier < LineSize - 1)
 	{
 		
-		if (!isletter(Line[TemporaryIdentifier]))
+		if (!IsLetter(Line[TemporaryIdentifier]))
 		{
 			LineIndex = TemporaryIdentifier;
 			SizeSubLine = TempSizeSubLine;
 			return true;
 		}
 		else
+		{
 			return false;
+		}
 	}
-	else if (TemporaryIdentifier == LineSize - 1 && isdigit(Line[TemporaryIdentifier]))
+	else if (TemporaryIdentifier == LineSize - 1 && IsDigit(Line[TemporaryIdentifier]))
 	{
 		LineIndex = TemporaryIdentifier;
 		SizeSubLine = TempSizeSubLine + 1;
@@ -389,201 +420,237 @@ bool IsDecimalInteger(string &Line, int &LineIndex, int &SizeSubLine, int LineSi
 	return true;
 }
 
-unique_ptr<Token>  WordDigit(string &Line, int &LineNumber, int &Identifier, int LineSize) 
+unique_ptr<Token>  ReadNumber(string &Line, int &LineNumber, int &Identifier, int LineSize) 
 {
 
 	int SizeSubLine = 1, TemporaryIdentifier = Identifier + 1;
-	unique_ptr<Token> ob(new Token());
-	bool real = false;
+	unique_ptr<Token> TokenObject(new Token());
+	bool NotInteger = false;
 
 	if (IsBinary(Line, TemporaryIdentifier, SizeSubLine, LineSize))
 	{ 
-		ob->SetTypeToken(Token::Words::Binary);
+		TokenObject->SetTypeToken(Token::Words::Binary);
 	}
 	else if (IsOctal(Line, TemporaryIdentifier, SizeSubLine, LineSize))
 	{ 
-		ob->SetTypeToken(Token::Words::Octal);
+		TokenObject->SetTypeToken(Token::Words::Octal);
 	}
 	else if (IsHexadecimal(Line, TemporaryIdentifier, SizeSubLine, LineSize))
 	{
-		ob->SetTypeToken(Token::Words::Hexadecimal);
+		TokenObject->SetTypeToken(Token::Words::Hexadecimal);
 	}
-	else if (IsDecimalInteger(Line, TemporaryIdentifier, SizeSubLine, LineSize, real))
+	else if (IsDecimalInteger(Line, TemporaryIdentifier, SizeSubLine, LineSize, NotInteger))
 	{
-		if (real)
-			ob->SetTypeToken(Token::Words::NotInteger);
+		if (NotInteger)
+		{
+			TokenObject->SetTypeToken(Token::Words::NotInteger);
+		}
 		else
-			ob->SetTypeToken(Token::Words::DecimalInteger);
+		{
+			TokenObject->SetTypeToken(Token::Words::DecimalInteger);
+		}
 	}
 	else
 	{
-		ob->SetTypeToken(Token::Words::Unexpected);
-		while (TemporaryIdentifier < LineSize - 1 && !isspace(Line[TemporaryIdentifier]))
+		TokenObject->SetTypeToken(Token::Words::Unexpected);
+		while (TemporaryIdentifier < LineSize - 1 && !IsSpace(Line[TemporaryIdentifier]))
 		{
 			TemporaryIdentifier++;
 			SizeSubLine++;
 		}
-		if (!isspace(Line[TemporaryIdentifier]))
+		if (!IsSpace(Line[TemporaryIdentifier]))
+		{
 			SizeSubLine++;
+		}
 	}
 
-	ob->SetStrNumber(LineNumber);
-	ob->SetColNumber(Identifier + 1);
-	ob->SetString(Line.substr(Identifier, SizeSubLine));
-	//cout << "Loc<" << LineNumber << ":" << (Identifier + 1) << "> " << ob->GetTypeToken() << " '" << ob->GetString() << "'" << endl;
+	TokenObject->SetStrNumber(LineNumber);
+	TokenObject->SetColNumber(Identifier + 1);
+	TokenObject->SetString(Line.substr(Identifier, SizeSubLine));
+	//cout << "Loc<" << LineNumber << ":" << (Identifier + 1) << "> " << TokenObject->GetTypeToken() << " '" << TokenObject->GetString() << "'" << endl;
 	Identifier = TemporaryIdentifier - 1;
 
-	return move(ob);
+	return move(TokenObject);
 }
 
-void ReadWord(int TemporaryIdentifier, unique_ptr<Token> const &ob, string &Line, int SizeSubLine, int &LineSize, int &LineIndex)
+void ReadWord(int TemporaryIdentifier, unique_ptr<Token> const &TokenObject, string &Line, int SizeSubLine, int &LineSize, int &LineIndex)
 {
-	if (ob->GetString() == "using") {
-		ob->SetTypeToken(Token::Words::KeyWordUsing);
+	if (TokenObject->GetString() == "using") 
+	{
+		TokenObject->SetTypeToken(Token::Words::KeyWordUsing);
 	}
-	else if (ob->GetString() == "public") {
-		ob->SetTypeToken(Token::Words::Public);
+	else if (TokenObject->GetString() == "public") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Public);
 	}
-	else if (ob->GetString() == "class") {
-		ob->SetTypeToken(Token::Words::Class);
+	else if (TokenObject->GetString() == "class") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Class);
 	}
-	else if (ob->GetString() == "static") {
-		ob->SetTypeToken(Token::Words::KeyWordStatic);
+	else if (TokenObject->GetString() == "static") 
+	{
+		TokenObject->SetTypeToken(Token::Words::KeyWordStatic);
 	}
-	else if (ob->GetString() == "while") {
-		ob->SetTypeToken(Token::Words::KeyWordWhile);
+	else if (TokenObject->GetString() == "while") 
+	{
+		TokenObject->SetTypeToken(Token::Words::KeyWordWhile);
 	}
-	else if (ob->GetString() == "if") {
-		ob->SetTypeToken(Token::Words::KeyWordIf);
+	else if (TokenObject->GetString() == "if") 
+	{
+		TokenObject->SetTypeToken(Token::Words::KeyWordIf);
 	}
-	else if (ob->GetString() == "new") {
-		ob->SetTypeToken(Token::Words::KeyWordNew);
+	else if (TokenObject->GetString() == "new") 
+	{
+		TokenObject->SetTypeToken(Token::Words::KeyWordNew);
 	}
-	else if (ob->GetString() == "return") {
-		ob->SetTypeToken(Token::Words::KeyWordReturn);
+	else if (TokenObject->GetString() == "return") 
+	{
+		TokenObject->SetTypeToken(Token::Words::KeyWordReturn);
 	}
-	else if (ob->GetString() == "else") {
-		ob->SetTypeToken(Token::Words::KeyWordElse);
+	else if (TokenObject->GetString() == "else") 
+	{
+		TokenObject->SetTypeToken(Token::Words::KeyWordElse);
 	}
-	else if (ob->GetString() == "System") {
-		ob->SetTypeToken(Token::Words::Library);
+	else if (TokenObject->GetString() == "System") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Library);
 	}
-	else if (ob->GetString() == "void") {
-		ob->SetTypeToken(Token::Words::Void);
+	else if (TokenObject->GetString() == "void") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Void);
 	}
-	else if (ob->GetString() == "var") {
-		ob->SetTypeToken(Token::Words::Var);
+	else if (TokenObject->GetString() == "var") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Var);
 	}
-	else if (ob->GetString() == "int") {
-		ob->SetTypeToken(Token::Words::Int);
+	else if (TokenObject->GetString() == "int") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Int);
 	}
-	else if (ob->GetString() == "char") {
-		ob->SetTypeToken(Token::Words::Char);
+	else if (TokenObject->GetString() == "char") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Char);
 	}
-	else if (ob->GetString() == "float") {
-		ob->SetTypeToken(Token::Words::Float);
+	else if (TokenObject->GetString() == "float") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Float);
 	}
-	else if (ob->GetString() == "double") {
-		ob->SetTypeToken(Token::Words::Double);
+	else if (TokenObject->GetString() == "double") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Double);
 	}
-	else if (ob->GetString() == "string") {
-		ob->SetTypeToken(Token::Words::string);
+	else if (TokenObject->GetString() == "string") 
+	{
+		TokenObject->SetTypeToken(Token::Words::string);
 	}
-	else if (ob->GetString() == "bool") {
-		ob->SetTypeToken(Token::Words::Bool);
+	else if (TokenObject->GetString() == "bool") 
+	{
+		TokenObject->SetTypeToken(Token::Words::Bool);
 	}
-	else {
-		ob->SetTypeToken(Token::Words::Identifier);
-		ob->SetString(Line.substr(LineIndex, SizeSubLine));
-		//cout << "!!!! = " << ob->GetString() << endl; 
+	else 
+	{
+		TokenObject->SetTypeToken(Token::Words::Identifier);
+		TokenObject->SetString(Line.substr(LineIndex, SizeSubLine));
 	}
 }
 
-unique_ptr<Token> WordString(string &Line, int &LineNumber, int &LineSize, int &LineIndex) 
+unique_ptr<Token> ReadString(string &Line, int &LineNumber, int &LineSize, int &LineIndex) 
 {
-	unique_ptr<Token> ob(new Token());
-	int SizeSubLine, TemporaryIdentifier;
-	//cout << "word" << endl;
-	SizeSubLine = 1;
-	TemporaryIdentifier = LineIndex + 1;
+	unique_ptr<Token> TokenObject(new Token());
+	int SizeSubLine = 1;
+	int TemporaryIdentifier = LineIndex + 1;
+
+	if (LineSize == 1)
+	{
+		TokenObject->SetStrNumber(LineNumber);
+		TokenObject->SetColNumber(LineIndex + 1);
+		TokenObject->SetString(Line.substr(0, 1));
+		TokenObject->SetTypeToken(Token::Words::Identifier);
+		return move(TokenObject);
+	}
 
 	if (LineSize > TemporaryIdentifier)
 	{
-		while (TemporaryIdentifier < LineSize - 1 && (isletter(Line[TemporaryIdentifier]) || isdigit(Line[TemporaryIdentifier]))) {
+		while (TemporaryIdentifier < LineSize - 1 && (IsLetter(Line[TemporaryIdentifier]) || IsDigit(Line[TemporaryIdentifier]))) {
 			SizeSubLine++;
 			TemporaryIdentifier++;
 		}
 
-		if (TemporaryIdentifier == LineSize - 1 && (isletter(Line[TemporaryIdentifier]) || isdigit(Line[TemporaryIdentifier])))
+		if (TemporaryIdentifier == LineSize - 1 && (IsLetter(Line[TemporaryIdentifier]) || IsDigit(Line[TemporaryIdentifier])))
 		{
 			SizeSubLine++;
 		}
-		else if (!(strchr("+-/*%&|=()[]{}<>;,.", Line[TemporaryIdentifier]) || Line[TemporaryIdentifier] == ' ' || LineSize - 1 == TemporaryIdentifier)) 
+		else if (!(strchr("+-/*%&|=()[]{}<>;,.", Line[TemporaryIdentifier]) || Line[TemporaryIdentifier] == ' ' || LineSize - 1 == TemporaryIdentifier))
+		{ 
 			return nullptr;
-
+		}
 	}
 
-	ob->SetString(Line.substr(LineIndex, SizeSubLine));
-	ReadWord(TemporaryIdentifier, ob, Line, SizeSubLine, LineSize, LineIndex);
-	//cout << "1Loc<" << LineNumber << ":" << (LineIndex + 1) << "> " << ob->GetTypeToken() << " '" << ob->GetString() << "'" << endl;
-	ob->SetStrNumber(LineNumber);
-	ob->SetColNumber(LineIndex + 1);
-	//cout << "2Loc<" << LineNumber << ":" << (LineIndex + 1) << "> " << ob->GetTypeToken() << " '" << ob->GetString() << "'" << endl;
+	TokenObject->SetString(Line.substr(LineIndex, SizeSubLine));
+	ReadWord(TemporaryIdentifier, TokenObject, Line, SizeSubLine, LineSize, LineIndex);
+
+	//cout << "1Loc<" << LineNumber << ":" << (LineIndex + 1) << "> " << TokenObject->GetTypeToken() << " '" << TokenObject->GetString() << "'" << endl;
+	TokenObject->SetStrNumber(LineNumber);
+	TokenObject->SetColNumber(LineIndex + 1);
+
+	//cout << "2Loc<" << LineNumber << ":" << (LineIndex + 1) << "> " << TokenObject->GetTypeToken() << " '" << TokenObject->GetString() << "'" << endl;
 
 	LineIndex = TemporaryIdentifier - 1;
-	if (TemporaryIdentifier == LineSize - 1 && isletter(Line[TemporaryIdentifier]))
+
+	if (TemporaryIdentifier == LineSize - 1 && IsLetter(Line[TemporaryIdentifier]))
 	{
 		LineIndex = TemporaryIdentifier;
 	}
-	return move(ob);
+	return move(TokenObject);
 }
 
-void checkOperEqual(unique_ptr<Token> const &ob, string &Line, int &LineSize, int &LineIndex, Token::Words tAs, Token::Words t)
+void CheckOperEqual(unique_ptr<Token> const &TokenObject, string &Line, int &LineSize, int &LineIndex, Token::Words TokenAssign, Token::Words TokenOperand)
 {
-	string s;
+	string Operator;
 	if (LineIndex + 1 < LineSize && Line[LineIndex + 1] == '=')
 	{
-		ob->SetTypeToken(tAs);
-		s = Line[LineIndex];
-		s += "=";
+		TokenObject->SetTypeToken(TokenAssign);
+		Operator = Line[LineIndex];
+		Operator += "=";
 		
-		ob->SetString(s);
+		TokenObject->SetString(Operator);
 		LineIndex++;
 	}
 	else
 	{
-		ob->SetTypeToken(t);
-		s = Line[LineIndex];
-		ob->SetString(s);
+		TokenObject->SetTypeToken(TokenOperand);
+		Operator = Line[LineIndex];
+		TokenObject->SetString(Operator);
 	}
 }
-//+-/*%&|=()[]{}<>;,.
-unique_ptr<Token> WordZnak(string &Line, int &LineNumber, int &LineSize, int &LineIndex) 
+
+unique_ptr<Token> ReadOperator(string &Line, int &LineNumber, int &LineSize, int &LineIndex) 
 {
-	unique_ptr<Token> ob(new Token());
+	unique_ptr<Token> TokenObject(new Token());
+
 	switch (Line[LineIndex]) {
 	case '+':
 		if (LineIndex + 1 < LineSize && Line[LineIndex + 1] == '+')
 		{
-			ob->SetTypeToken(Token::Words::Increment);
-			ob->SetString("++");
+			TokenObject->SetTypeToken(Token::Words::Increment);
+			TokenObject->SetString("++");
 			LineIndex++;
 		}
 		else
 		{
-			checkOperEqual(ob, Line, LineSize, LineIndex, Token::Words::AddAssign, Token::Words::Plus);
+			CheckOperEqual(TokenObject, Line, LineSize, LineIndex, Token::Words::AddAssign, Token::Words::Plus);
 		}
 		break;
 	case '-':
 		if (LineIndex + 1 < LineSize && Line[LineIndex + 1] == '-')
 		{
-			ob->SetTypeToken(Token::Words::Decrement);
-			ob->SetString("--");
+			TokenObject->SetTypeToken(Token::Words::Decrement);
+			TokenObject->SetString("--");
 			LineIndex++;
 		}
 		else
 		{
-			checkOperEqual(ob, Line, LineSize, LineIndex, Token::Words::SubAssign, Token::Words::Minus);
+			CheckOperEqual(TokenObject, Line, LineSize, LineIndex, Token::Words::SubAssign, Token::Words::Minus);
 		}
 		break;
 	case '/':
@@ -594,97 +661,97 @@ unique_ptr<Token> WordZnak(string &Line, int &LineNumber, int &LineSize, int &Li
 		}
 		else if (LineIndex + 1 < LineSize && Line[LineIndex + 1] == '=')
 		{
-			ob->SetTypeToken(Token::Words::DivAssign);
-			ob->SetString("/=");
+			TokenObject->SetTypeToken(Token::Words::DivAssign);
+			TokenObject->SetString("/=");
 			LineIndex++;
 		}
 		else
 		{
-			ob->SetTypeToken(Token::Words::Slash);
-			ob->SetString("/");
+			TokenObject->SetTypeToken(Token::Words::Slash);
+			TokenObject->SetString("/");
 		}
 		break;
 	case '*':
-		checkOperEqual(ob, Line, LineSize, LineIndex, Token::Words::MultAssign, Token::Words::Asterisk);
+		CheckOperEqual(TokenObject, Line, LineSize, LineIndex, Token::Words::MultAssign, Token::Words::Asterisk);
 		break;
 	case '%':
-		ob->SetTypeToken(Token::Words::Percent);
-		ob->SetString("%");
+		TokenObject->SetTypeToken(Token::Words::Percent);
+		TokenObject->SetString("%");
 		break;
 	case '=':
-		checkOperEqual(ob, Line, LineSize, LineIndex, Token::Words::Equal, Token::Words::Assignment);
+		CheckOperEqual(TokenObject, Line, LineSize, LineIndex, Token::Words::Equal, Token::Words::Assignment);
 		break;
 	case '(':
-		ob->SetTypeToken(Token::Words::LeftParen);
-		ob->SetString("(");
+		TokenObject->SetTypeToken(Token::Words::LeftParen);
+		TokenObject->SetString("(");
 		break;
 	case ')':
-		ob->SetTypeToken(Token::Words::RightParen);
-		ob->SetString(")");
+		TokenObject->SetTypeToken(Token::Words::RightParen);
+		TokenObject->SetString(")");
 		break;
 	case '[':
-		ob->SetTypeToken(Token::Words::LeftSquare);
-		ob->SetString("[");
+		TokenObject->SetTypeToken(Token::Words::LeftSquare);
+		TokenObject->SetString("[");
 		break;
 	case ']':
-		ob->SetTypeToken(Token::Words::RightSquare);
-		ob->SetString("]");
+		TokenObject->SetTypeToken(Token::Words::RightSquare);
+		TokenObject->SetString("]");
 		break;
 	case '{':
-		ob->SetTypeToken(Token::Words::LeftCurly);
-		ob->SetString("{");
+		TokenObject->SetTypeToken(Token::Words::LeftCurly);
+		TokenObject->SetString("{");
 		break;
 	case '}':
-		ob->SetTypeToken(Token::Words::RightCurly);
-		ob->SetString("}");
+		TokenObject->SetTypeToken(Token::Words::RightCurly);
+		TokenObject->SetString("}");
 		break;
 	case '.':
-		ob->SetTypeToken(Token::Words::Point);
-		ob->SetString(".");
+		TokenObject->SetTypeToken(Token::Words::Point);
+		TokenObject->SetString(".");
 		break;
 	case ';':
-		ob->SetTypeToken(Token::Words::Semicolon);
-		ob->SetString(";");
+		TokenObject->SetTypeToken(Token::Words::Semicolon);
+		TokenObject->SetString(";");
 		break;
 	case '<':
-		checkOperEqual(ob, Line, LineSize, LineIndex, Token::Words::LessOrEqual, Token::Words::LessThan);
+		CheckOperEqual(TokenObject, Line, LineSize, LineIndex, Token::Words::LessOrEqual, Token::Words::LessThan);
 		break;
 	case '>':
-		checkOperEqual(ob, Line, LineSize, LineIndex, Token::Words::MoreOrEqual, Token::Words::GreaterThan);
+		CheckOperEqual(TokenObject, Line, LineSize, LineIndex, Token::Words::MoreOrEqual, Token::Words::GreaterThan);
 		break;
 	case ',':
-		ob->SetTypeToken(Token::Words::Comma);
-		ob->SetString(",");
+		TokenObject->SetTypeToken(Token::Words::Comma);
+		TokenObject->SetString(",");
 		break;
 	case '&':
 		if (LineIndex + 1 < LineSize &&Line[LineIndex + 1] == '&')
 		{
-			ob->SetTypeToken(Token::Words::Conjunction);
-			ob->SetString("&&");
+			TokenObject->SetTypeToken(Token::Words::Conjunction);
+			TokenObject->SetString("&&");
 			LineIndex++;
 		}
 		else
 		{
-			ob->SetTypeToken(Token::Words::Unexpected);
-				ob->SetString("&");
+			TokenObject->SetTypeToken(Token::Words::Unexpected);
+			TokenObject->SetString("&");
 		}
 		break;
 	case '|':
 		if (LineIndex + 1 < LineSize &&Line[LineIndex + 1] == '|')
 		{
-			ob->SetTypeToken(Token::Words::Disjunction);
-			ob->SetString("||");
+			TokenObject->SetTypeToken(Token::Words::Disjunction);
+			TokenObject->SetString("||");
 			LineIndex++;
 		}
 		else
 		{
-			ob->SetTypeToken(Token::Words::Unexpected);
-				ob->SetString("|");
+			TokenObject->SetTypeToken(Token::Words::Unexpected);
+				TokenObject->SetString("|");
 		}
 		break;
 	}
-	ob->SetStrNumber(LineNumber);
-	ob->SetColNumber(LineIndex + 1);	
-	//cout << "Loc<" << LineNumber << ":" << (LineIndex + 1) << "> " << ob->GetTypeToken() << " '" << ob->GetString() << "'" << endl;
-	return move(ob);
+	TokenObject->SetStrNumber(LineNumber);
+	TokenObject->SetColNumber(LineIndex + 1);	
+	//cout << "Loc<" << LineNumber << ":" << (LineIndex + 1) << "> " << TokenObject->GetTypeToken() << " '" << TokenObject->GetString() << "'" << endl;
+	return move(TokenObject);
 }

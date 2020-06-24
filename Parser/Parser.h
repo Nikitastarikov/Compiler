@@ -8,8 +8,8 @@
 using namespace std;
 
 
-bool GetNextToken(int &index, int size, vector<unique_ptr<Token>> const &VectorToken);
-bool GetPredToken(int &index, int size, vector<unique_ptr<Token>> const &VectorToken);
+bool GetNextToken(int &Index, int size, vector<unique_ptr<Token>> const &VectorToken);
+bool GetPredToken(int &Index, int size, vector<unique_ptr<Token>> const &VectorToken);
 void RedactionString(string &str);
 
 template<typename T, typename... Args>
@@ -28,45 +28,47 @@ class Parser
 	map<string, vector<ScopeVar>> Table;
 	unique_ptr<AST> Root;
 	int FlagEqual = 0;
-	char FlagError = 0;
+	int FlagError = 0;
 	string FlagDefenition = "";
 
 public:
 	//friend class SemanticAnalysis;
 	Parser() {}
 	map<string, vector<ScopeVar>> const &GetTableSymbol() { return Table; }
-	void Parsing(vector<unique_ptr<Token>> const &VectorToken, int size, int option);
-	int GetTokPrecedence(vector<unique_ptr<Token>> const &VectorToken, int &index, int size);
-	bool CheckDigit(vector<unique_ptr<Token>> const &VectorToken, int index);
-	bool CheckType(vector<unique_ptr<Token>> const &VectorToken, int index);
-	bool CheckThisIsBlock(string str);
-	unique_ptr<AST> ArrayDefenition(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, vector<ScopeVar> &SubTable, string scope, int indexFun, string idType);
-	unique_ptr<AST> ParseParenAST(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable);
-	unique_ptr<AST> ParseTypeIdentifierAST(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, vector<ScopeVar> &SubTable, string scope, int indexFun);
-	unique_ptr<AST> ParseIdentifierASTArray(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string const &IdName, unique_ptr<AST> id, string scope, int indexFun, vector<ScopeVar> &SubTable);
-	unique_ptr<AST> ParseIdentifierASTFun(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string const &IdName, string scope, int indexFun, vector<ScopeVar> &SubTable, int flagMethod);
-	unique_ptr<AST> ParseIdentifierAST(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable);
-	unique_ptr<AST> ParseNumberStringAST(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, vector<ScopeVar> &SubTable, string scope, int flag);
-	unique_ptr<AST> ParsePrimary(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable);
-	unique_ptr<AST> KeyWordNew(int ExprPrec, unique_ptr<AST> LHS, vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable);
-	unique_ptr<AST> ParseBinOpRHS(int ExprPrec, unique_ptr<AST> LHS, vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable);
-	unique_ptr<AST> ReadIf(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int &indexFun);
-	unique_ptr<AST> ReadFunLocal(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTableFun);
-	unique_ptr<AST> ReadWhile(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun);
-	unique_ptr<AST> ReadElse(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun);
-	unique_ptr<AST> ReadReturn(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable);
-	unique_ptr<AST> ReadSubBlock(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun);
-	unique_ptr<AST> ReadFun(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope);
-	vector<unique_ptr<AST>> ReadFunBody(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, vector<ScopeVar> &SubTable);
-	vector<unique_ptr<AST>> ReadBodyClass(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexClass);
-	unique_ptr<AST> ReadClass(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexClass);
-	unique_ptr<AST> ReadUsing(vector<unique_ptr<Token>> const &VectorToken, int &index, int size);
+	void Parsing(vector<unique_ptr<Token>> const &VectorToken, int size, int Option);
+	int GetTokPrecedence(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size);
+	bool CheckDigit(vector<unique_ptr<Token>> const &VectorToken, int Index);
+	bool CheckType(vector<unique_ptr<Token>> const &VectorToken, int Index);
+	bool CheckThisIsBlock(string NodeName);
+	unique_ptr<AST> ArrayDefenition(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, vector<ScopeVar> &SubTable, string Scope, int IndexFun, string IdType);
+	unique_ptr<AST> ParseParenAST(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTable);
+	unique_ptr<AST> ParseTypeIdentifierAST(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, vector<ScopeVar> &SubTable, string Scope, int IndexFun);
+	unique_ptr<AST> ParseIdentifierASTArray(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string const &IdName, unique_ptr<AST> id, string Scope, int IndexFun, vector<ScopeVar> &SubTable);
+	unique_ptr<AST> ParseIdentifierASTFun(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string const &IdName, string Scope, int IndexFun, vector<ScopeVar> &SubTable, int FlagMethod);
+	unique_ptr<AST> ParseIdentifierAST(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTable);
+	unique_ptr<AST> ParseNumberStringAST(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, vector<ScopeVar> &SubTable, string Scope, int Flag);
+	unique_ptr<AST> ParsePrimary(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTable);
+	unique_ptr<AST> KeyWordNew(int ExprPrec, unique_ptr<AST> LHS, vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTable);
+	unique_ptr<AST> ParseBinOpRHS(int ExprPrec, unique_ptr<AST> LHS, vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTable);
+	unique_ptr<AST> ReadIf(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int &IndexFun);
+	unique_ptr<AST> ReadFunLocal(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTableFun);
+	unique_ptr<AST> ReadWhile(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun);
+	unique_ptr<AST> ReadElse(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun);
+	unique_ptr<AST> ReadReturn(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTable);
+	unique_ptr<AST> ReadSubBlock(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun);
+	unique_ptr<AST> ReadFun(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope);
+	vector<unique_ptr<AST>> ReadFunBody(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, vector<ScopeVar> &SubTable);
+	vector<unique_ptr<AST>> ReadBodyClass(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexClass);
+	unique_ptr<AST> ReadClass(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexClass);
+	unique_ptr<AST> ReadUsing(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size);
 	vector<unique_ptr<AST>> BuildAST(vector<unique_ptr<Token>> const &VectorToken, int size);
-	string CheckIdName(vector<ScopeVar> &it, string name);
-	string CheckIdTableSymbol(string name, string scope, string type);
-	string CheckDeclaretion(string scope, string name, string type, unique_ptr<AST> const &tree, vector<ScopeVar> &SubTable);
-	string CheckDeclaretion(string scope, string name, string type, unique_ptr<ASTIdentifier> const &tree, vector<ScopeVar> &SubTable);
+	string CheckIdName(vector<ScopeVar> &Iterator, string Name);
+	string CheckIdTableSymbol(string Name, string Scope, string Type);
+	string CheckDeclaretion(string Scope, string Name, string Type, unique_ptr<AST> const &Tree, vector<ScopeVar> &SubTable);
+	string CheckDeclaretion(string Scope, string Name, string Type, unique_ptr<ASTIdentifier> const &Tree, vector<ScopeVar> &SubTable);
 	void PrintTable();
+
+	char GetFlagError() {return FlagError;}
 
 	vector<unique_ptr<AST>> const &GetRootVector()
 	{
@@ -74,130 +76,167 @@ public:
 	}
 
 	map<string, vector<ScopeVar>> &GetTable() { return Table; }
-	unique_ptr<AST> ReadExpression(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable)
+	unique_ptr<AST> ReadExpression(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTable)
 	{
-		auto LHS = ParsePrimary(VectorToken, index, size, scope, indexFun, SubTable);
-		if (!LHS) return nullptr;
+		auto LHS = ParsePrimary(VectorToken, Index, size, Scope, IndexFun, SubTable);
+		if (!LHS) 
+		{
+			return nullptr;
+		}
 
-		return ParseBinOpRHS(0, move(LHS), VectorToken, index, size, scope, indexFun, SubTable);
+		return ParseBinOpRHS(0, move(LHS), VectorToken, Index, size, Scope, IndexFun, SubTable);
 	}
 	
-	unique_ptr<AST> LogError(int NumStr, int NumCol, string const Str)
+	unique_ptr<AST> LogError(int NumStr, int NumCol, string const StringError)
 	{
 		FlagError = 1;
-		if (Str == "") return nullptr;
+		if (StringError == "") 
+		{
+			return nullptr;
+		}
 
 		if (NumStr == 0 && NumCol == 0)
-			cout << " Parsing error:" << Str << endl;
+		{
+			cout << " Parsing error:" << StringError << endl;
+		}
 		else
-			cout << NumStr << ":" << NumCol << " Parsing error:" << Str << endl;
+		{
+			cout << NumStr << ":" << NumCol << " Parsing error:" << StringError << endl;
+		}
+
 		return nullptr;
 	}
-	unique_ptr<ASTCallFun> LogErrorP(int NumStr, int NumCol, string const Str)
+	unique_ptr<ASTCallFun> LogErrorP(int NumStr, int NumCol, string const StringError)
 	{
 		FlagError = 1;
-		LogError(NumStr, NumCol, Str);
+		LogError(NumStr, NumCol, StringError);
 		return nullptr;
 	}
-	unique_ptr<ASTFun> LogErrorOpr(int NumStr, int NumCol, string const Str)
+	unique_ptr<ASTFun> LogErrorOpr(int NumStr, int NumCol, string const StringError)
 	{
 		FlagError = 1;
-		LogError(NumStr, NumCol, Str);
+		LogError(NumStr, NumCol, StringError);
 		return nullptr;
 	}
-	vector<unique_ptr<AST>> LogErrorVector(int NumStr, int NumCol, string const Str)
+	vector<unique_ptr<AST>> LogErrorVector(int NumStr, int NumCol, string const StringError)
 	{
 		vector<unique_ptr<AST>> ZeroVector;
 		FlagError = 1;
-		if (Str == "") return move(ZeroVector);
+		if (StringError == "") 
+		{
+			return move(ZeroVector);
+		}
 
 		if (NumStr == 0 && NumCol == 0)
-			cout << " Parsing error:" << Str << endl;
+		{
+			cout << " Parsing error:" << StringError << endl;
+		}
 		else
-			cout << NumStr << ":" << NumCol << " Parsing error:" << Str << endl;
+		{
+			cout << NumStr << ":" << NumCol << " Parsing error:" << StringError << endl;
+		}
+
 		return move(ZeroVector);
 	}
 	
-	unique_ptr<AST> Correctness(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string Error)
+	unique_ptr<AST> Correctness(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Error)
 	{
-		cout << VectorToken[index]->GetStrNum() << ":" << VectorToken[index]->GetColNum();
-		index = size - 1;
+		cout << VectorToken[Index]->GetStrNum() << ":" << VectorToken[Index]->GetColNum();
+		Index = size - 1;
+
 		return LogError(0, 0, Error);
 	}
-	unique_ptr<ASTFun> CorrectnessOpr(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string Error)
+	unique_ptr<ASTFun> CorrectnessOpr(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Error)
 	{
-		cout << VectorToken[index]->GetStrNum() << ":" << VectorToken[index]->GetColNum();
-		index = size - 1;
+		cout << VectorToken[Index]->GetStrNum() << ":" << VectorToken[Index]->GetColNum();
+		Index = size - 1;
+
 		return LogErrorOpr(0, 0, Error);
 	}
-	vector<unique_ptr<AST>> CorrectnessVect(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string Error)
+	vector<unique_ptr<AST>> CorrectnessVect(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Error)
 	{
-		cout << VectorToken[index]->GetStrNum() << ":" << VectorToken[index]->GetColNum();
-		index = size - 1;
+		cout << VectorToken[Index]->GetStrNum() << ":" << VectorToken[Index]->GetColNum();
+		Index = size - 1;
+
 		return LogErrorVector(0, 0, Error);
 	}
-	unique_ptr<AST> CorrectnessDefenition(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, unique_ptr<AST> id)
+	unique_ptr<AST> CorrectnessDefenition(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, unique_ptr<AST> id)
 	{
-		if (id == nullptr) Correctness(VectorToken, index, size, " incorrect defenition ");
+		if (id == nullptr) 
+		{
+			Correctness(VectorToken, Index, size, " incorrect defenition ");
+		}
+
 		return move(id);
 	}
 
-	unique_ptr<AST> CheckOb(vector<unique_ptr<Token>> const &VectorToken, int &index, string scope, int indexFun, vector<ScopeVar> &SubTable, string Error, unique_ptr<AST> ob)
+	unique_ptr<AST> CheckOb(vector<unique_ptr<Token>> const &VectorToken, int &Index, string Scope, int IndexFun, vector<ScopeVar> &SubTable, string Error, unique_ptr<AST> NodeObject)
 	{
-		if (ob != nullptr)
+		if (NodeObject != nullptr)
 		{
-			if (ob->GetStrName() != "Console")
+			if (NodeObject->GetStrName() != "Console")
 			{		
-				string str = CheckDeclaretion(scope, ob->GetStrName(), ob->GetStrType(), ob, SubTable);
+				string str = CheckDeclaretion(Scope, NodeObject->GetStrName(), NodeObject->GetStrType(), NodeObject, SubTable);
 				
-				//cout << "CheckOb " << ob->GetStrName() << " " << ob->GetStrType() << endl;
-				if (str == ob->GetStrName() + " without definition" || str == ob->GetStrName() + " has definition at this lvl")
-					return LogError(VectorToken[index]->GetStrNum(), VectorToken[index]->GetColNum(), " " + str);
-				ob->SetStrType(str);
+				//cout << "CheckOb " << NodeObject->GetStrName() << " " << NodeObject->GetStrType() << endl;
+				if (str == NodeObject->GetStrName() + " without definition" || str == NodeObject->GetStrName() + " has definition at this lvl")
+				{
+					return LogError(VectorToken[Index]->GetStrNum(), VectorToken[Index]->GetColNum(), " " + str);
+				}
+
+				NodeObject->SetStrType(str);
 			}
-			return move(ob);
+			return move(NodeObject);
 		}
-		return LogError(VectorToken[index]->GetStrNum(), VectorToken[index]->GetColNum(), Error);
+		return LogError(VectorToken[Index]->GetStrNum(), VectorToken[Index]->GetColNum(), Error);
 	}
 
-	unique_ptr<AST> CallMethod(vector<unique_ptr<Token>> const &VectorToken, int &index, int size, string scope, int indexFun, vector<ScopeVar> &SubTable, string IdName)
+	unique_ptr<AST> CallMethod(vector<unique_ptr<Token>> const &VectorToken, int &Index, int size, string Scope, int IndexFun, vector<ScopeVar> &SubTable, string IdName)
 	{
-		GetNextToken(index, size, VectorToken);//Пропуск .
+		GetNextToken(Index, size, VectorToken);//Пропуск .
 
-		if (VectorToken[index]->GetTypeToken() == Token::Words::Identifier)
+		if (VectorToken[Index]->GetTypeToken() == Token::Words::Identifier)
 		{
-			//auto Method = ParseIdentifierAST(VectorToken, index, size, scope, indexFun, SubTable);
-			//if (Method != nullptr) return make_unique<ASTIdentifier>(IdName, move(Method), scope);
+			//auto Method = ParseIdentifierAST(VectorToken, Index, size, Scope, IndexFun, SubTable);
+			//if (Method != nullptr) return make_unique<ASTIdentifier>(IdName, move(Method), Scope);
 
-			if (VectorToken[index]->GetString() == "Write" || VectorToken[index]->GetString() == "WriteLine")
+			if (VectorToken[Index]->GetString() == "Write" || VectorToken[Index]->GetString() == "WriteLine")
 			{
-				GetNextToken(index, size, VectorToken);
-				auto Method = ParseIdentifierASTFun(VectorToken, index, size, VectorToken[index - 1]->GetString(), scope, indexFun, SubTable, 0);
-				if (Method != nullptr) return make_unique<ASTIdentifier>(IdName, move(Method), scope);
+				GetNextToken(Index, size, VectorToken);
+				auto Method = ParseIdentifierASTFun(VectorToken, Index, size, VectorToken[Index - 1]->GetString(), Scope, IndexFun, SubTable, 0);
+				
+				if (Method != nullptr) 
+				{
+					return make_unique<ASTIdentifier>(IdName, move(Method), Scope);
+				}
 			}
 			
-			if (VectorToken[index]->GetString() == "ReadLine")
+			if (VectorToken[Index]->GetString() == "ReadLine")
 			{
-				GetNextToken(index, size, VectorToken);
-				auto Method = ParseIdentifierASTFun(VectorToken, index, size, VectorToken[index - 1]->GetString(), scope, indexFun, SubTable, 1);
-				if (Method != nullptr) return make_unique<ASTIdentifier>(IdName, move(Method), scope);
+				GetNextToken(Index, size, VectorToken);
+				auto Method = ParseIdentifierASTFun(VectorToken, Index, size, VectorToken[Index - 1]->GetString(), Scope, IndexFun, SubTable, 1);
+				
+				if (Method != nullptr) 
+				{
+					return make_unique<ASTIdentifier>(IdName, move(Method), Scope);
+				}
 			}
-			/*else if (IdName != "Console" && VectorToken[index]->GetString() == "Length")
+			/*else if (IdName != "Console" && VectorToken[Index]->GetString() == "Length")
 			{
-				//GetNextToken(index, size, VectorToken);
-				auto Method = ParseIdentifierAST(VectorToken, index, size, scope, indexFun, SubTable);
+				//GetNextToken(Index, size, VectorToken);
+				auto Method = ParseIdentifierAST(VectorToken, Index, size, Scope, IndexFun, SubTable);
 				if (Method != nullptr)
 				{
 					Method->SetStrType("int");
 					Method->SetMethodLength();
 					return move(Method);
-					//return make_unique<ASTString>(IdName, scope, move(Method));
+					//return make_unique<ASTString>(IdName, Scope, move(Method));
 				}
 			}*/
 
-			return Correctness(VectorToken, index, size, " the " + IdName + " does't have a " + VectorToken[index]->GetString() + " method");
+			return Correctness(VectorToken, Index, size, " the " + IdName + " does't have a " + VectorToken[Index]->GetString() + " method");
 		}
 
-		return Correctness(VectorToken, index, size, " expected id after 'Console.' or 'string.'");
+		return Correctness(VectorToken, Index, size, " expected id after 'Console.' or 'string.'");
 	}
 };

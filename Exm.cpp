@@ -58,13 +58,14 @@ int main(int argn, char **argv) {
 	Lexer Lex;
 	string Line;
 	int LineNumber = 1;
+
 	while (!fileinput.eof()) 
 	{
 		getline(fileinput, Line);
-		//cout << Line << endl;
 		Lex.GetNextToken(Line, LineNumber, 0, VectorToken);
 		LineNumber++;
 	}
+
 	Lex.GetNextToken(Line, LineNumber, 1, VectorToken);
 	fileinput.close();
 

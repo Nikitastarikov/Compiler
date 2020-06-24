@@ -12,7 +12,7 @@ class AST
 	unique_ptr<AST> Expression = nullptr;
 	vector<unique_ptr<AST>> Children;
 	char flagforarray;
-	string scope = "";
+	string Scope = "";
 
 public:
 	virtual void SetMethodLength() {}
@@ -20,7 +20,7 @@ public:
 	void space_print(int space) { for (int i = 0; i < space; i++) cout << " "; }
 	virtual string GetStrName() { return "unssigned"; }
 	virtual string GetStrType() { return "unssigned"; }
-	virtual string GetScope() { return scope; }
+	virtual string GetScope() { return Scope; }
 	string GetSystemNumber() { return "This is't digit"; }
 	virtual void SetStrType(string type) { cout << "SetStrType" << endl; }
 	virtual vector<unique_ptr<AST>> const &GetChild() { return Children; }
@@ -40,7 +40,7 @@ public:
 class ASTRoot : public AST
 {
 	vector<unique_ptr<AST>> Children;
-	string scope = "";
+	string Scope = "";
 public:
 	ASTRoot(vector<unique_ptr<AST>> children) : Children(move(children)) {}
 
@@ -64,14 +64,14 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
 class ASTUsing : public AST
 {
 	string Library = "";
-	string scope = "";
+	string Scope = "";
 	//unique_ptr<AST> Parent;
 public:
 	ASTUsing(string const &lib) : Library(lib) {}
@@ -87,7 +87,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -96,7 +96,7 @@ class ASTClass : public AST
 	//unique_ptr<AST> Parent;
 	vector<unique_ptr<AST>> Children;
 	string Name;
-	string scope = "";
+	string Scope = "";
 public:
 	ASTClass(vector<unique_ptr<AST>> children, string const &name) : Children(move(children)), Name(name) {}
 	ASTClass(string const &name) : Name(name) {}
@@ -131,7 +131,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -140,11 +140,11 @@ class ASTFun : public AST
 	string Name = "";
 	string Type = "unssigned";
 	vector<unique_ptr<AST>> Args;
-	string scope = "";
+	string Scope = "";
 
 public:
-	ASTFun(string const &name, string const &type, vector<unique_ptr<AST>> args, string s) : Name(name), Type(type), Args(move(args)), scope(s)/*, TypeArgs(move(typeargs))*/ {}
-	ASTFun(string const &name, string const &type, string s) : Name(name), Type(type), scope(s) {}
+	ASTFun(string const &name, string const &type, vector<unique_ptr<AST>> args, string s) : Name(name), Type(type), Args(move(args)), Scope(s)/*, TypeArgs(move(typeargs))*/ {}
+	ASTFun(string const &name, string const &type, string s) : Name(name), Type(type), Scope(s) {}
 	void AddArg(unique_ptr<AST> arg)
 	{
 		Args.push_back(move(arg));
@@ -153,7 +153,7 @@ public:
 	void print(int space)
 	{
 		space_print(space);
-		cout << Type << " " << Name << "( scope-" << scope << endl;
+		cout << Type << " " << Name << "( Scope-" << Scope << endl;
 		for (int i = 0; i < Args.size(); i++)
 			Args[i]->print(space + 2);
 		space_print(space);
@@ -183,7 +183,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -191,10 +191,10 @@ class ASTLocal : public AST
 {
 	unique_ptr<AST> ChildName;
 	vector<unique_ptr<AST>> Children;
-	string scope = "";
+	string Scope = "";
 	string Type = "unssigned";
 public:
-	ASTLocal(unique_ptr<AST> childname, vector<unique_ptr<AST>> children, string s) : ChildName(move(childname)), Children(move(children)), scope(s)
+	ASTLocal(unique_ptr<AST> childname, vector<unique_ptr<AST>> children, string s) : ChildName(move(childname)), Children(move(children)), Scope(s)
 	{
 		Type = ChildName->GetStrType();
 	}
@@ -226,7 +226,7 @@ public:
 	void print(int space)
 	{
 		space_print(space);
-		cout << "Local( scope-" << scope << endl;
+		cout << "Local( Scope-" << Scope << endl;
 		ChildName->print(space);
 		for (int i = 0; i < Children.size(); i++)
 			Children[i]->print(space + 2);
@@ -242,7 +242,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -250,7 +250,7 @@ class ASTStatic : public AST
 {
 	unique_ptr<AST> ChildName;
 	vector<unique_ptr<AST>> Children;
-	string scope = "";
+	string Scope = "";
 	string Type = "unssigned";
 public:
 	ASTStatic(unique_ptr<AST> childname, vector<unique_ptr<AST>> children) : ChildName(move(childname)), Children(move(children)) 
@@ -298,7 +298,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -307,15 +307,15 @@ class ASTDigit : public AST
 	//unique_ptr<AST> Parent;
 	string SystemNumber;
 	string Val;
-	string scope = "";
+	string Scope = "";
 
 public:
-	ASTDigit(string const &systemnumber, string const &val, string s) : SystemNumber(systemnumber), Val(val), scope(s) {}
-	ASTDigit(string const &val, string s) : Val(val), scope(s) {}
+	ASTDigit(string const &systemnumber, string const &val, string s) : SystemNumber(systemnumber), Val(val), Scope(s) {}
+	ASTDigit(string const &val, string s) : Val(val), Scope(s) {}
 	void print(int space)
 	{
 		space_print(space);
-		cout << "( scope-" << scope << " " << SystemNumber << " " << Val << ")" << endl;
+		cout << "( Scope-" << Scope << " " << SystemNumber << " " << Val << ")" << endl;
 		
 	}
 
@@ -336,24 +336,24 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
 class ASTString : public AST
 {
 	string String;
-	string scope = "";
+	string Scope = "";
 	string Type = "string";
 	unique_ptr<AST> Method = nullptr;
 
 public:
-	ASTString(string const &str, string s) : String(str), scope(s) {}
-	ASTString(string const &str, string s, unique_ptr<AST> method) : String(str), scope(s), Method(move(method)) {}
+	ASTString(string const &str, string s) : String(str), Scope(s) {}
+	ASTString(string const &str, string s, unique_ptr<AST> method) : String(str), Scope(s), Method(move(method)) {}
 	void print(int space)
 	{
 		space_print(space);
-		cout << "String( scope-" << scope << " " << String << ")" << endl;
+		cout << "String( Scope-" << Scope << " " << String << ")" << endl;
 		if (Method != nullptr)
 			Method->print(space + 2);
 	}
@@ -370,7 +370,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 
 	unique_ptr<AST> const &GetExpressionL()
@@ -385,13 +385,13 @@ class ASTIdentifier : public AST
 	string Type = "unssigned";
 	unique_ptr<AST> Method = nullptr;
 	bool Declar = false;
-	string scope = "";
+	string Scope = "";
 	bool Length = false;
 	//unique_ptr<AST> Parent;
 
 public:
-	ASTIdentifier(string const &name, string const &type, string s, bool d = false) : Name(name), Type(type), scope(s), Declar(d) {}
-	ASTIdentifier(string const &name, unique_ptr<AST> method, string s) : Name(name), Method(move(method)), scope(s)
+	ASTIdentifier(string const &name, string const &type, string s, bool d = false) : Name(name), Type(type), Scope(s), Declar(d) {}
+	ASTIdentifier(string const &name, unique_ptr<AST> method, string s) : Name(name), Method(move(method)), Scope(s)
 	{
 		if (Method->GetStrName() == "Write")
 		{
@@ -402,7 +402,7 @@ public:
 			Type = "var";
 		}
 	}
-	ASTIdentifier(string const &name, string s) : Name(name), scope(s) {}
+	ASTIdentifier(string const &name, string s) : Name(name), Scope(s) {}
 
 	void SetMethodLength() { Length = true;}
 
@@ -413,7 +413,7 @@ public:
 	void print(int space)
 	{
 		space_print(space);
-		cout << "( scope-" << scope << " " << Type << " " << Name << endl;
+		cout << "( Scope-" << Scope << " " << Type << " " << Name << endl;
 		if (Method != nullptr)
 			Method->print(space + 2);
 		space_print(space);
@@ -443,7 +443,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -451,21 +451,21 @@ class ASTArray : public AST
 {
 	//string Name;
 	string Type = "unssigned";
-	string scope = "";
+	string Scope = "";
 	unique_ptr<AST> Array;
 	vector<unique_ptr<AST>> Size;
 	vector<unique_ptr<AST>> Index;
 	char flagNew;
 
 public:
-	ASTArray(unique_ptr<AST> array_, vector<unique_ptr<AST>> index, string s, char flagn = 1) : Array(move(array_)), Index(move(index)), scope(s), flagNew(flagn) {}
-	ASTArray(unique_ptr<AST> array_, string const &type, vector<unique_ptr<AST>> size, string s, char flagn = 0) : Array(move(array_)), Type(type), Size(move(size)), scope(s), flagNew(flagn) {}
+	ASTArray(unique_ptr<AST> array_, vector<unique_ptr<AST>> Index, string s, char flagn = 1) : Array(move(array_)), Index(move(Index)), Scope(s), flagNew(flagn) {}
+	ASTArray(unique_ptr<AST> array_, string const &type, vector<unique_ptr<AST>> size, string s, char flagn = 0) : Array(move(array_)), Type(type), Size(move(size)), Scope(s), flagNew(flagn) {}
 	void print(int space)
 	{
 		space_print(space);
 		if (!flagNew)
 		{
-			cout << "Array new( scope-" << scope << " " << Type << endl;
+			cout << "Array new( Scope-" << Scope << " " << Type << endl;
 			Array->print(space + 2);
 			
 			space_print(space + 2);
@@ -480,7 +480,7 @@ public:
 		}
 		else
 		{
-			cout << "Array( scope-" << scope << endl;
+			cout << "Array( Scope-" << Scope << endl;
 			Array->print(space + 2);
 
 			space_print(space + 2);
@@ -539,20 +539,20 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
 class ASTElse : public AST
 {
 	vector<unique_ptr<AST>> Children;
-	string scope = "";
+	string Scope = "";
 public:
-	ASTElse(vector<unique_ptr<AST>> children, string s) : Children(move(children)), scope(s) {}
+	ASTElse(vector<unique_ptr<AST>> children, string s) : Children(move(children)), Scope(s) {}
 	void print(int space)
 	{
 		space_print(space);
-		cout << "Else( scope-" << scope << endl;
+		cout << "Else( Scope-" << Scope << endl;
 		for (int i = 0; i < Children.size(); i++)
 		{
 			Children[i]->print(space + 2);
@@ -568,24 +568,24 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
 class ASTIf : public AST
 {
-	string scope = "";
+	string Scope = "";
 	//unique_ptr<AST> Parent;
 	unique_ptr<AST> Expression;
 	unique_ptr<AST> Else = nullptr;
 	vector<unique_ptr<AST>> Children;
 public:
-	ASTIf(unique_ptr<AST> expression, vector<unique_ptr<AST>> children, string s) : Expression(move(expression)), Children(move(children)), scope(s) {}
-	ASTIf(unique_ptr<AST> expression, vector<unique_ptr<AST>> children, unique_ptr<AST> else_, string s) : Expression(move(expression)), Children(move(children)), Else(move(else_)), scope(s) {}
+	ASTIf(unique_ptr<AST> expression, vector<unique_ptr<AST>> children, string s) : Expression(move(expression)), Children(move(children)), Scope(s) {}
+	ASTIf(unique_ptr<AST> expression, vector<unique_ptr<AST>> children, unique_ptr<AST> else_, string s) : Expression(move(expression)), Children(move(children)), Else(move(else_)), Scope(s) {}
 	void print(int space)
 	{
 		space_print(space);
-		cout << "If( scope-" << scope << endl;
+		cout << "If( Scope-" << Scope << endl;
 		
 		Expression->print(space + 2);
 		
@@ -626,22 +626,22 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
 class ASTWhile : public AST
 {
 	//unique_ptr<AST> Parent;
-	string scope = "";
+	string Scope = "";
 	unique_ptr<AST> Expression;
 	vector<unique_ptr<AST>> Children;
 public:
-	ASTWhile(unique_ptr<AST> expression, vector<unique_ptr<AST>> children, string s) : Expression(move(expression)), Children(move(children)), scope(s) {}
-	ASTWhile(vector<unique_ptr<AST>> children, string s) : Children(move(children)), scope(s) {}
+	ASTWhile(unique_ptr<AST> expression, vector<unique_ptr<AST>> children, string s) : Expression(move(expression)), Children(move(children)), Scope(s) {}
+	ASTWhile(vector<unique_ptr<AST>> children, string s) : Children(move(children)), Scope(s) {}
 	void print(int space) {
 		space_print(space);
-		cout << "While( scope-" << scope << endl;
+		cout << "While( Scope-" << Scope << endl;
 
 		Expression->print(space + 2);
 
@@ -672,7 +672,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -680,13 +680,13 @@ class ASTSubBlock : public AST
 {
 	//unique_ptr<AST> Parent;
 	vector<unique_ptr<AST>> Children;
-	string scope = "";
+	string Scope = "";
 public:
-	ASTSubBlock(vector<unique_ptr<AST>> children, string s) : Children(move(children)), scope(s) {}
+	ASTSubBlock(vector<unique_ptr<AST>> children, string s) : Children(move(children)), Scope(s) {}
 	void print(int space) {
 
 		space_print(space);
-		cout << "SubBlock body( scope-" << scope << endl;
+		cout << "SubBlock body( Scope-" << Scope << endl;
 
 		for (int i = 0; i < Children.size(); i++)
 		{
@@ -704,7 +704,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -714,13 +714,13 @@ class ASTOperationBin : public AST
 	unique_ptr<AST> Left = nullptr;
 	unique_ptr<AST> Right = nullptr;
 	string Op;
-	string scope = "";
+	string Scope = "";
 	
 public:
-	ASTOperationBin(unique_ptr<AST> left, unique_ptr<AST> right, string op, string s)// : Right(move(right)), Left(move(left)), Op(op), scope(scope) 
+	ASTOperationBin(unique_ptr<AST> left, unique_ptr<AST> right, string op, string s)// : Right(move(right)), Left(move(left)), Op(op), Scope(Scope) 
 	{
 		Op = op;
-		scope = s;
+		Scope = s;
 		Left = move(left);
 		Right = move(right);
 	}
@@ -728,7 +728,7 @@ public:
 	void print(int space)
 	{
 		space_print(space);
-		cout << Op << " scope-" << scope << endl;
+		cout << Op << " Scope-" << Scope << endl;
 		if (Left != nullptr) Left->print(space + 2);
 		if (Right != nullptr) Right->print(space + 2);
 		//cout << endl;
@@ -756,7 +756,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
@@ -765,15 +765,15 @@ class ASTCallFun : public AST
 	string Name;
 	//unique_ptr<AST> Parent;
 	vector<unique_ptr<AST>> Args;
-	string scope = "";
+	string Scope = "";
 	string Type = "unssigned";
 public:
-	ASTCallFun(string const &name, vector<unique_ptr<AST>> args, string s) : Name(name), Args(move(args)), scope(s) {}
+	ASTCallFun(string const &name, vector<unique_ptr<AST>> args, string s) : Name(name), Args(move(args)), Scope(s) {}
 	
 	void print(int space)
 	{
 		space_print(space);
-		cout << "scope - " << scope << " " << Type << " " << Name << "(" << endl;
+		cout << "Scope - " << Scope << " " << Type << " " << Name << "(" << endl;
 		for (int i = 0; i < Args.size(); i++)
 			Args[i]->print(space + 2);
 		space_print(space);
@@ -803,21 +803,21 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 };
 
 class ASTReturn : public AST
 {
 	unique_ptr<AST> Id = nullptr;
-	string scope = "";
+	string Scope = "";
 public:
-	ASTReturn(unique_ptr<AST> id, string s) : Id(move(id)), scope(s) {}
-	ASTReturn(string s) : scope(s) {}
+	ASTReturn(unique_ptr<AST> id, string s) : Id(move(id)), Scope(s) {}
+	ASTReturn(string s) : Scope(s) {}
 	void print(int space)
 	{
 		space_print(space);
-		cout << "return( scope-" << scope << endl;
+		cout << "return( Scope-" << Scope << endl;
 		if (Id != nullptr)
 			Id->print(space + 2);
 		space_print(space);
@@ -826,7 +826,7 @@ public:
 
 	string GetScope()
 	{
-		return scope;
+		return Scope;
 	}
 
 	unique_ptr<AST> const &GetExpressionL()
