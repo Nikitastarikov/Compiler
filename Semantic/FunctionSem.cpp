@@ -288,8 +288,25 @@ bool SemanticAnalysis::CheckSemanticOperation(unique_ptr<AST> const &NodeOperati
 		//if (NodeName == "ASTDigit" && NodeOperation->GetExpressionR()->GetStrType() != "NotInteger")
 		//		NodeName = "int";
 		//else
-		NodeName = NodeOperation->GetExpressionL()->GetStrType();
-			//cout << NodeOperation->GetExpressionR()->GetStrName() << endl;
+		NodeName = typeid(*NodeOperation->GetExpressionL()).name();
+		RedactionString(NodeName);
+
+		//cout << "NodeName = " << NodeName << endl;
+		//cout << "Name = " << NodeOperation->GetStrName() << endl;
+
+		if (NodeName == "ASTOperationBin")
+		{
+			NodeName = NodeOperation->GetExpressionL()->GetExpressionR()->GetStrType();
+		}
+		else if (NodeName == "AST")
+		{
+			NodeName = NodeOperation->GetExpressionR()->GetStrType();
+			//cout << "NodeName = " << NodeName << endl;
+		}
+		else
+		{
+			NodeName = NodeOperation->GetExpressionL()->GetStrType();
+		}
 
 		if (NodeOperation->GetExpressionR()->GetStrName() == "Console" && NodeOperation->GetExpressionR()->GetExpressionL() != nullptr/* && NodeOperation->GetExpressionR()->GetExpressionL()->GetStrName() == "ReadLine"*/)
 		{
@@ -297,6 +314,7 @@ bool SemanticAnalysis::CheckSemanticOperation(unique_ptr<AST> const &NodeOperati
 		}
 		else if (!CheckTwoTypes(NodeName, NodeRType))//Проверка возможности привидения определенных типов
 		{
+			cout << "There" << endl;
 			SemError(NodeOperation->GetExpressionL()->GetStrType() + " can't lead to " + NodeRType + ": " + NodeOperation->GetExpressionL()->GetStrName() + " " + NodeOperation->GetStrName() + " " + NodeOperation->GetExpressionR()->GetStrName());
 			return false;
 		}

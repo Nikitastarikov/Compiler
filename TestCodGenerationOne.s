@@ -18,7 +18,7 @@ main:
 
 	movl $5, %eax
 	movl i, %ebx
-	cmp %ebx, %eax
+	cmpl %ebx, %eax
 	jng else_blockWhile_1_1_2
 
 if_blockWhile_1_1_2:
@@ -30,7 +30,7 @@ if_blockWhile_1_1_2:
 
 	movl $5, %eax
 	movl i, %ebx
-	cmp %ebx, %eax
+	cmpl %ebx, %eax
 	jng else_blockWhile_1_1_2
 
 	jmp if_blockWhile_1_1_2

@@ -18,7 +18,7 @@ main:
 
 	movl $5, %eax
 	movl i, %ebx
-	cmp %ebx, %eax
+	cmpl %ebx, %eax
 	jng blocif_1_1_2
 
 

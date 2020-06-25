@@ -7,8 +7,8 @@ class GenerationCod
 public:
 	void StartGenerationCod(vector<unique_ptr<AST>> const &VectorClass, map<string, vector<ScopeVar>> &Table, int option, string File);
 	void ClassTraversal(unique_ptr<AST> const &NodeClass, ofstream &Fileoutput);
-	void FunBodyPass(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput);
-	void CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileoutput, int IndexPrintf);
+	void FunBodyTraversal(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput);
+	void CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileoutput, int &IndexPrintf);
 
 	//Запись в поле .data
 	void WriteData(map<string, vector<ScopeVar>> &Table, ofstream &Fileoutput);
@@ -17,7 +17,7 @@ public:
 	void WriteDataStrings(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput);
 
 	void Operation(ofstream &Fileoutput, string OperandIdL, string Operator);
-	void Compare(ofstream &Fileoutput, string op, string NameBlock);
+	void Compare(ofstream &Fileoutput, string op, string NameBlock, string Type);
 	
 	//Арифметика
 	void StartArithmeticGeneration(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput);

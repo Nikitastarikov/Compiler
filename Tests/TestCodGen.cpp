@@ -208,7 +208,7 @@ TEST_CASE("CheckGenerationCodWhile", "[single-file]")
 
 	LineAssem.push_back("\tmovl $5, %eax");//19
 	LineAssem.push_back("\tmovl i, %ebx");
-	LineAssem.push_back("\tcmp %ebx, %eax");
+	LineAssem.push_back("\tcmpl %ebx, %eax");
 	LineAssem.push_back("\tjng else_blockWhile_1_1_2");
 
 	LineAssem.push_back("if_blockWhile_1_1_2:");//24
@@ -220,7 +220,7 @@ TEST_CASE("CheckGenerationCodWhile", "[single-file]")
 
 	LineAssem.push_back("\tmovl $5, %eax");//31
 	LineAssem.push_back("\tmovl i, %ebx");//32
-	LineAssem.push_back("\tcmp %ebx, %eax");//33
+	LineAssem.push_back("\tcmpl %ebx, %eax");//33
 	LineAssem.push_back("\tjng else_blockWhile_1_1_2");//34
 
 	LineAssem.push_back("\tjmp if_blockWhile_1_1_2");//36
@@ -359,7 +359,7 @@ TEST_CASE("CheckGenerationCodIf", "[single-file]")
 
 	LineAssem.push_back("\tmovl $5, %eax");//19
 	LineAssem.push_back("\tmovl i, %ebx");
-	LineAssem.push_back("\tcmp %ebx, %eax");
+	LineAssem.push_back("\tcmpl %ebx, %eax");
 	LineAssem.push_back("\tjng blocif_1_1_2");
 
 

@@ -1,10 +1,7 @@
-using System;
-class Begin
+public class Program
 {
-    static void Main()
+   public static void Main() 
     {
-        int i = 5;
-        int Result = 10 / 2 * (i % 3 % 2);
-        Console.WriteLine(Result);
+        int i = 1;
     }
 }
