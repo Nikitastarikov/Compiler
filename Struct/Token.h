@@ -82,7 +82,6 @@ public:
 		BinopPrecedence["-="] = 10;
 		BinopPrecedence["*="] = 10;
 		BinopPrecedence["/="] = 10;
-		BinopPrecedence["%"] = 10;
 		BinopPrecedence["<"] = 20;
 		BinopPrecedence[">"] = 20;
 		BinopPrecedence[">="] = 20;
@@ -94,6 +93,7 @@ public:
 		BinopPrecedence["-"] = 30;
 		BinopPrecedence["*"] = 40;
 		BinopPrecedence["/"] = 40;
+		BinopPrecedence["%"] = 40;
 	}
 
 	Token(Words Token) : TokenType(Token) 
@@ -105,7 +105,6 @@ public:
 		BinopPrecedence["-="] = 10;
 		BinopPrecedence["*="] = 10;
 		BinopPrecedence["/="] = 10;
-		BinopPrecedence["%"] = 10;
 		BinopPrecedence["<"] = 20;
 		BinopPrecedence[">"] = 20;
 		BinopPrecedence["=="] = 20;
@@ -117,6 +116,7 @@ public:
 		BinopPrecedence["-"] = 30;
 		BinopPrecedence["*"] = 40;
 		BinopPrecedence["/"] = 40;
+		BinopPrecedence["%"] = 40;
 	}
 
 	void SetTypeToken(Words Token) { TokenType = Token; }

@@ -68,7 +68,7 @@ TEST_CASE("CheckGenerationCodOperation", "[single-file]")
 	LineAssem.push_back("\tpopl %ebx");
 	LineAssem.push_back("\tmovl i, %eax");
 	LineAssem.push_back("\tpushl %eax");
-	LineAssem.push_back("\tmovl %ebx,i");
+	LineAssem.push_back("\tmovl %ebx, i");
 
 	getline(Fileinput, Line);//1
 	REQUIRE(LineAssem[Index] == Line);
@@ -129,8 +129,6 @@ TEST_CASE("CheckGenerationCodOperation", "[single-file]")
 	Index++;
 
 	getline(Fileinput, Line);//17
-	REQUIRE(LineAssem[Index] == Line);
-	Index++;
 
 	getline(Fileinput, Line);//18
 	REQUIRE(LineAssem[Index] == Line);
@@ -141,6 +139,10 @@ TEST_CASE("CheckGenerationCodOperation", "[single-file]")
 	Index++;
 
 	getline(Fileinput, Line);//20
+	REQUIRE(LineAssem[Index] == Line);
+	Index++;
+
+	getline(Fileinput, Line);//21
 	REQUIRE(LineAssem[Index] == Line);
 	Index++;
 	
@@ -204,13 +206,12 @@ TEST_CASE("CheckGenerationCodWhile", "[single-file]")
 	}
 	//cout << "Assembler:" << endl << endl;
 
-	LineAssem.push_back("\tmovl $5, %eax");//18
+	LineAssem.push_back("\tmovl $5, %eax");//19
 	LineAssem.push_back("\tmovl i, %ebx");
 	LineAssem.push_back("\tcmp %ebx, %eax");
 	LineAssem.push_back("\tjng else_blockWhile_1_1_2");
-	LineAssem.push_back("\tcmp %ebx, %eax");
-	LineAssem.push_back("\tjng else_blockWhile_1_1_2");
-	LineAssem.push_back("if_blockWhile_1_1_2:");
+
+	LineAssem.push_back("if_blockWhile_1_1_2:");//24
 	LineAssem.push_back("\tincl i");
 
 	LineAssem.push_back("\tpushl i");//27
@@ -221,22 +222,17 @@ TEST_CASE("CheckGenerationCodWhile", "[single-file]")
 	LineAssem.push_back("\tmovl i, %ebx");//32
 	LineAssem.push_back("\tcmp %ebx, %eax");//33
 	LineAssem.push_back("\tjng else_blockWhile_1_1_2");//34
-	LineAssem.push_back("\tcmp %ebx, %eax");//35
-	LineAssem.push_back("\tjng else_blockWhile_1_1_2");//36
-	LineAssem.push_back("\tjmp if_blockWhile_1_1_2");//37
-	LineAssem.push_back("else_blockWhile_1_1_2:");//38
 
-	while (!Fileinput.eof() && Index < 17) 
+	LineAssem.push_back("\tjmp if_blockWhile_1_1_2");//36
+	LineAssem.push_back("else_blockWhile_1_1_2:");//37
+
+	while (!Fileinput.eof() && Index < 18) 
 	{
 		getline(Fileinput, Line);
 		Index++;
 	}
 
 	Index = 0;
-
-	getline(Fileinput, Line);//18
-	REQUIRE(LineAssem[Index] == Line);
-	Index++;
 
 	getline(Fileinput, Line);//19
 	REQUIRE(LineAssem[Index] == Line);
@@ -255,8 +251,6 @@ TEST_CASE("CheckGenerationCodWhile", "[single-file]")
 	Index++;
 
 	getline(Fileinput, Line);//23
-	REQUIRE(LineAssem[Index] == Line);
-	Index++;
 
 	getline(Fileinput, Line);//24
 	REQUIRE(LineAssem[Index] == Line);
@@ -267,7 +261,7 @@ TEST_CASE("CheckGenerationCodWhile", "[single-file]")
 	Index++;
 
 	getline(Fileinput, Line);//26
-	
+
 	getline(Fileinput, Line);//27
 	REQUIRE(LineAssem[Index] == Line);
 	Index++;
@@ -281,7 +275,7 @@ TEST_CASE("CheckGenerationCodWhile", "[single-file]")
 	Index++;
 
 	getline(Fileinput, Line);//30
-
+	
 	getline(Fileinput, Line);//31
 	REQUIRE(LineAssem[Index] == Line);
 	Index++;
@@ -299,18 +293,12 @@ TEST_CASE("CheckGenerationCodWhile", "[single-file]")
 	Index++;
 
 	getline(Fileinput, Line);//35
-	REQUIRE(LineAssem[Index] == Line);
-	Index++;
 
 	getline(Fileinput, Line);//36
 	REQUIRE(LineAssem[Index] == Line);
 	Index++;
 
 	getline(Fileinput, Line);//37
-	REQUIRE(LineAssem[Index] == Line);
-	Index++;
-
-	getline(Fileinput, Line);//38
 	REQUIRE(LineAssem[Index] == Line);
 	Index++;
 
@@ -369,12 +357,11 @@ TEST_CASE("CheckGenerationCodIf", "[single-file]")
 	}
 	//cout << "Assembler:" << endl << endl;
 
-	LineAssem.push_back("\tmovl $5, %eax");//18
+	LineAssem.push_back("\tmovl $5, %eax");//19
 	LineAssem.push_back("\tmovl i, %ebx");
 	LineAssem.push_back("\tcmp %ebx, %eax");
 	LineAssem.push_back("\tjng blocif_1_1_2");
-	LineAssem.push_back("\tcmp %ebx, %eax");
-	LineAssem.push_back("\tjng blocif_1_1_2");
+
 
 	LineAssem.push_back("\tpushl i");//25
 	LineAssem.push_back("\tpushl $format_l_n");
@@ -382,17 +369,13 @@ TEST_CASE("CheckGenerationCodIf", "[single-file]")
 
 	LineAssem.push_back("\tblocif_1_1_2:");//29
 
-	while (!Fileinput.eof() && Index < 17) 
+	while (!Fileinput.eof() && Index < 18) 
 	{
 		getline(Fileinput, Line);
 		Index++;
 	}
 
 	Index = 0;
-
-	getline(Fileinput, Line);//18
-	REQUIRE(LineAssem[Index] == Line);
-	Index++;
 
 	getline(Fileinput, Line);//19
 	REQUIRE(LineAssem[Index] == Line);
@@ -411,8 +394,6 @@ TEST_CASE("CheckGenerationCodIf", "[single-file]")
 	Index++;
 
 	getline(Fileinput, Line);//23
-	REQUIRE(LineAssem[Index] == Line);
-	Index++;
 
 	getline(Fileinput, Line);//24
 
@@ -423,7 +404,7 @@ TEST_CASE("CheckGenerationCodIf", "[single-file]")
 	getline(Fileinput, Line);//26
 	REQUIRE(LineAssem[Index] == Line);
 	Index++;
-	
+
 	getline(Fileinput, Line);//27
 	REQUIRE(LineAssem[Index] == Line);
 	Index++;

@@ -6,8 +6,9 @@ public class Program
         int a = initialization_variable(name);
         name = "b";
         int b = initialization_variable(name);
+        int i = a;
 
-        for (int i=a; i > 0; i--)
+        while (i > 0)
         {
             if (a % i == 0)
             {
@@ -17,6 +18,7 @@ public class Program
                     i = 0;
                 }
             }
+            i--;
         }
     }
 

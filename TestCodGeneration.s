@@ -14,11 +14,13 @@ main:
 	movl $6, %eax
 	movl $1, %ebx
 	addl %ebx, %eax
+
 	pushl %eax
 	popl %ebx
 	movl i, %eax
 	pushl %eax
-	movl %ebx,i
+	movl %ebx, i
+
 	pushl %eax
 	leave
 	ret
@@ -31,4 +33,6 @@ main:
 		.string "%d\n"
 
 	i:
+		.long 0
+	Temp:
 		.long 0

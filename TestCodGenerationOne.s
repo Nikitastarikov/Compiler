@@ -10,7 +10,8 @@ main:
 
 	movl i, %eax
 	movl $3, %ebx
-	movl %ebx,i
+	movl %ebx, i
+
 	pushl %eax
 	xorl %eax, %eax
 	xorl %ebx, %ebx
@@ -19,8 +20,7 @@ main:
 	movl i, %ebx
 	cmp %ebx, %eax
 	jng else_blockWhile_1_1_2
-	cmp %ebx, %eax
-	jng else_blockWhile_1_1_2
+
 if_blockWhile_1_1_2:
 	incl i
 
@@ -32,8 +32,7 @@ if_blockWhile_1_1_2:
 	movl i, %ebx
 	cmp %ebx, %eax
 	jng else_blockWhile_1_1_2
-	cmp %ebx, %eax
-	jng else_blockWhile_1_1_2
+
 	jmp if_blockWhile_1_1_2
 else_blockWhile_1_1_2:
 	leave
@@ -47,4 +46,6 @@ else_blockWhile_1_1_2:
 		.string "%d\n"
 
 	i:
+		.long 0
+	Temp:
 		.long 0

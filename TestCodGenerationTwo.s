@@ -10,7 +10,8 @@ main:
 
 	movl i, %eax
 	movl $3, %ebx
-	movl %ebx,i
+	movl %ebx, i
+
 	pushl %eax
 	xorl %eax, %eax
 	xorl %ebx, %ebx
@@ -19,8 +20,7 @@ main:
 	movl i, %ebx
 	cmp %ebx, %eax
 	jng blocif_1_1_2
-	cmp %ebx, %eax
-	jng blocif_1_1_2
+
 
 	pushl i
 	pushl $format_l_n
@@ -38,4 +38,6 @@ blocif_1_1_2:
 		.string "%d\n"
 
 	i:
+		.long 0
+	Temp:
 		.long 0

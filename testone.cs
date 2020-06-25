@@ -1,9 +1,10 @@
 using System;
 class Begin
 {
-    static int main(int rio)
+    static void Main()
     {
-    	int j = 5;
- 		Console.Write(j);
+        int i = 5;
+        int Result = 10 / 2 * (i % 3 % 2);
+        Console.WriteLine(Result);
     }
 }

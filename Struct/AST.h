@@ -393,7 +393,7 @@ public:
 	ASTIdentifier(string const &name, string const &type, string s, bool d = false) : Name(name), Type(type), Scope(s), Declar(d) {}
 	ASTIdentifier(string const &name, unique_ptr<AST> method, string s) : Name(name), Method(move(method)), Scope(s)
 	{
-		if (Method->GetStrName() == "Write")
+		if (Method->GetStrName() == "Write" || Method->GetStrName() == "WriteLine")
 		{
 			Type = "void";
 		}

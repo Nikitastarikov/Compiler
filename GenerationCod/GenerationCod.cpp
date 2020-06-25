@@ -53,6 +53,7 @@ void GenerationCod::StartGenerationCod(vector<unique_ptr<AST>> const &VectorClas
 
 	//.data записываю из таблицы символов
 	WriteData(Table, Fileoutput);
+	WriteDataStringsClass(VectorClass, Fileoutput);
 
 	Fileoutput.close();
 
@@ -101,19 +102,32 @@ void GenerationCod::ClassTraversal(unique_ptr<AST> const &NodeClass, ofstream &F
 void GenerationCod::FunBodyPass(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput)
 {
 	int IndexChildAST = 0;
+	int IndexPrintf = 1;
 
 	if (!NodeBodyFun->GetChild().empty())
 	{
 		while (IndexChildAST < NodeBodyFun->GetChild().size())
 		{
 			string NodeName = typeid(*NodeBodyFun->GetChild()[IndexChildAST]).name();
-			string NameOfTheLeftSubnode = NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetStrName();
-			string ScopeOfTheLeftSubnode = NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetScope();
+			string NameOfTheLeftSubnode = "";
+			string ScopeOfTheLeftSubnode = "";
+
 			RedactionString(NodeName);//Строка приводится в годное состояние
-			
+
+			//cout << "NodeName = " << NodeName << endl;
+			if (NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL() != nullptr)
+			{
+
+				NameOfTheLeftSubnode = NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetStrName();
+				ScopeOfTheLeftSubnode = NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetScope();
+				
+				//cout << "NodeName(L) = " << NameOfTheLeftSubnode << endl;
+			}
+
 			if (NodeName == "ASTIdentifier" && NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL() != nullptr && (NameOfTheLeftSubnode == "Write" || NameOfTheLeftSubnode == "WriteLine"))
 			{
-				CallPrintf(NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL(), Fileoutput);//Генерация Вывода
+				CallPrintf(NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL(), Fileoutput, IndexPrintf);//Генерация Вывода
+				IndexPrintf++;
 			}
 			else if (NodeName == "ASTOperationBin")
 			{
@@ -127,6 +141,7 @@ void GenerationCod::FunBodyPass(unique_ptr<AST> const &NodeBodyFun, ofstream &Fi
 			{
 				WhileTraversal(NodeBodyFun->GetChild()[IndexChildAST], Fileoutput, ScopeOfTheLeftSubnode);//Генерация блока while
 			}
+			
 
 			IndexChildAST++;
 		}
@@ -138,27 +153,27 @@ void GenerationCod::Compare(ofstream &Fileoutput, string op, string NameBlock)
 	Fileoutput << "\tcmp %ebx, %eax" << endl;
 	if (op == "==")
 	{
-		Fileoutput << "\tjne " << NameBlock << endl;
+		Fileoutput << "\tjne " << NameBlock << endl << endl;
 	}
 	else if (op == "!=")
 	{
-		Fileoutput << "\tje " << NameBlock << endl;
+		Fileoutput << "\tje " << NameBlock << endl << endl;
 	}
 	else if (op == "<")
 	{
-		Fileoutput << "\tjnl " << NameBlock << endl;
+		Fileoutput << "\tjnl " << NameBlock << endl << endl;
 	}
 	else if (op == ">")
 	{
-		Fileoutput << "\tjng " << NameBlock << endl;
+		Fileoutput << "\tjng " << NameBlock << endl << endl;
 	}
 	else if (op == ">=")
 	{
-		Fileoutput << "\tjl " << NameBlock << endl;
+		Fileoutput << "\tjl " << NameBlock << endl << endl;
 	}
 	else if (op == "<=")
 	{
-		Fileoutput << "\tjg " << NameBlock << endl;
+		Fileoutput << "\tjg " << NameBlock << endl << endl;
 	}
 }
 
@@ -198,7 +213,7 @@ void GenerationCod::ExpressionIF(unique_ptr<AST> const &NodeIfExp, ofstream &Fil
 		PreparingTheOperand(RegisterAcum, NodeIfExp->GetExpressionL(), Fileoutput);
 		PreparingTheOperand(RegisterBas, NodeIfExp->GetExpressionR(), Fileoutput);
 
-		Compare(Fileoutput, NodeIfExp->GetStrName(), NameBlock);
+		//Compare(Fileoutput, NodeIfExp->GetStrName(), NameBlock);
 	}
 
 	if (NodeNameTwo == "ASTOperationBin")
@@ -305,21 +320,22 @@ void GenerationCod::WhileTraversal(unique_ptr<AST> const &NodeWhile, ofstream &F
 	Fileoutput << "else_blockWhile_" << Scope << ":" << endl;
 }
 
-void GenerationCod::CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileoutput)
+void GenerationCod::CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileoutput, int IndexPrintf)
 {
 	Fileoutput << endl;
 
 	if (CallPrn->GetArgs()[0] != nullptr)
 	{
-		string name = typeid(*CallPrn->GetArgs()[0]).name();
-		RedactionString(name);//Строка приводится в годное состояние
+		string Name = typeid(*CallPrn->GetArgs()[0]).name();
+		RedactionString(Name);//Строка приводится в годное состояние
 
-		//cout << "Callprintf: " << name << endl;
-		if (name == "ASTIdentifier")
+		//cout << "Callprintf: " << Name << endl;
+		if (Name == "ASTIdentifier")
 		{
 			Fileoutput << "\tpushl " << CallPrn->GetArgs()[0]->GetStrName() << endl;
+			Fileoutput << "\tpushl " << "$format_l_n" << endl;
 		}
-		else if (name == "ASTArray")
+		else if (Name == "ASTArray")
 		{
 			//cout << CallPrn->GetArgs()[0]->GetIndex()[0]->GetStrName() << endl;
 			string temp = typeid(CallPrn->GetArgs()[0]->GetIndex()[0]).name();
@@ -336,9 +352,15 @@ void GenerationCod::CallPrintf(unique_ptr<AST> const &CallPrn, ofstream &Fileout
 				Fileoutput << "\tmovl " << CallPrn->GetArgs()[0]->GetStrName() << "(, %ecx, 4), %eax" << endl;
 			}
 			Fileoutput << "\tpushl %eax" << endl;
+			Fileoutput << "\tpushl " << "$format_l_n" << endl;
 		}
+		else if (Name == "ASTString")
+		{
+			Fileoutput << "\tpushl $String_" <<  CallPrn->GetArgs()[0]->GetScope() << "_" << IndexPrintf << endl;
+		}
+
 	}
-	Fileoutput << "\tpushl " << "$format_l_n" << endl;
+	
 	Fileoutput << "\tcall printf" << endl << endl;
 
 	//while (i < CallPrn->GetArgs().size())
@@ -363,6 +385,7 @@ void GenerationCod::WriteData(map<string, vector<ScopeVar>> &Table, ofstream &Fi
 	for (; it != Table.end(); it++)
 	{
 		if (!it->second.empty())
+		{
 			for (int i = 0; i < it->second.size(); i++)
 			{
 				if (it->second[i].getNode() != nullptr)
@@ -390,6 +413,99 @@ void GenerationCod::WriteData(map<string, vector<ScopeVar>> &Table, ofstream &Fi
 					}
 				}
 			}
+		}
+	}
+	Fileoutput << "\tTemp:" << endl;
+	Fileoutput << "\t\t.long 0" << endl;
+}
+
+void GenerationCod::WriteDataStringsClass(vector<unique_ptr<AST>> const &VectorClass, ofstream &Fileoutput)
+{
+	int IndexChildAST = 0;
+
+	while (IndexChildAST < VectorClass.size())
+	{
+		string NodeName = typeid(*VectorClass[IndexChildAST]).name();// Запись имени узла
+		RedactionString(NodeName);//Строка приводится в годное состояние
+
+		if (NodeName == "ASTClass")
+		{
+			WriteDataStringsFunction(VectorClass[IndexChildAST], Fileoutput);
+		}
+		IndexChildAST++;
+	}
+}
+
+void GenerationCod::WriteDataStringsFunction(unique_ptr<AST> const &NodeClass, ofstream &Fileoutput)
+{
+	int IndexChildAST = 0;
+
+	if (!NodeClass->GetChild().empty())
+	{
+		while (IndexChildAST < NodeClass->GetChild().size())
+		{
+			string NodeName = typeid(*NodeClass->GetChild()[IndexChildAST]).name();
+			RedactionString(NodeName);//Строка приводится в годное состояние
+
+			//cout << "Inside " << typeid(*NodeClass).name() << " ClassTraversal: " << NodeName << endl;
+ 			if (NodeName == "ASTStatic")
+			{
+				//Генерация кода для функции
+				WriteDataStrings(NodeClass->GetChild()[IndexChildAST], Fileoutput);
+			}
+			IndexChildAST++;
+		}
+	}
+}
+
+void GenerationCod::WriteDataStrings(unique_ptr<AST> const &NodeBodyFun, ofstream &Fileoutput)
+{
+	int IndexChildAST = 0;
+	int IndexPrintf = 1;
+
+	if (!NodeBodyFun->GetChild().empty())
+	{
+		while (IndexChildAST < NodeBodyFun->GetChild().size())
+		{
+			string NodeName = typeid(*NodeBodyFun->GetChild()[IndexChildAST]).name();
+			string NameOfTheLeftSubnode = "";
+			string ScopeOfTheLeftSubnode = "";
+			RedactionString(NodeName);//Строка приводится в годное состояние
+
+			if (NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL() != nullptr)
+			{
+				NameOfTheLeftSubnode = NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetStrName();
+				ScopeOfTheLeftSubnode = NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetScope();
+			}
+			
+			if (NodeName == "ASTIdentifier" && NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL() != nullptr && (NameOfTheLeftSubnode == "Write" || NameOfTheLeftSubnode == "WriteLine"))
+			{
+				if (NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetArgs()[0] != nullptr)
+				{
+
+					string SubnodeName = typeid(*NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetArgs()[0]).name();
+					RedactionString(SubnodeName);
+					//cout << SubnodeName << endl;
+					if (SubnodeName == "ASTString")
+					{
+						Fileoutput << "\tString_" << NodeBodyFun->GetChild()[IndexChildAST]->GetScope() << "_" << IndexPrintf << ":" << endl;
+						Fileoutput << "\t\t.string " << NodeBodyFun->GetChild()[IndexChildAST]->GetExpressionL()->GetArgs()[0]->GetStrName() << endl;
+						IndexPrintf++;
+					}
+				}
+			}
+			else if (NodeName == "ASTIf")
+			{
+				WriteDataStrings(NodeBodyFun->GetChild()[IndexChildAST], Fileoutput);
+			}
+			else if (NodeName == "ASTWhile")
+			{
+				
+				WriteDataStrings(NodeBodyFun->GetChild()[IndexChildAST], Fileoutput);
+			}
+
+			IndexChildAST++;
+		}
 	}
 }
 
@@ -398,23 +514,46 @@ void GenerationCod::Operation(ofstream &Fileoutput, string OperandIdL, string Op
 
 	if (Operator == "=")
 	{	
-		Fileoutput << "\tmovl %ebx," << OperandIdL << endl;
+		Fileoutput << "\tmovl %ebx, " << OperandIdL << endl << endl;
 	}
 	else if (Operator == "+")
 	{
-		Fileoutput << "\taddl %ebx, %eax" << endl;
+		Fileoutput << "\taddl %ebx, %eax" << endl << endl;
 	}
 	else if (Operator == "-")
 	{
-		Fileoutput << "\tsub %ebx, %eax" << endl;
+		Fileoutput << "\tsubl %ebx, %eax" << endl << endl;
 	}
 	else if (Operator == "*")
 	{
-		Fileoutput << "\tmull %ebx" << endl;
+		Fileoutput << "\tmull %ebx" << endl << endl;
 	}
 	else if (Operator == "/")
 	{
-		Fileoutput << "\tidivl %ebx" << endl;
+		Fileoutput << "\tcdq" << endl;
+		Fileoutput << "\tidivl %ebx" << endl << endl;
+	}
+	else if (Operator == "%")
+	{
+		Fileoutput << "\txorl %edx, %edx" << endl;
+		Fileoutput << "\txorl %ecx, %ecx" << endl;
+
+		Fileoutput << "\tmovl %ebx, %ecx" << endl;
+		Fileoutput << "\tmovl %eax, Temp" << endl;
+
+		//Fileoutput << "\tmovl %eax, %ecx" << endl;
+
+		Fileoutput << "\tcdq" << endl;
+		Fileoutput << "\tidivl %ecx" << endl;//Получили только целую часть деления в %eax
+
+		//Fileoutput << "\tmovl %eax, Temp" << endl;
+		Fileoutput << "\tmull %ecx" << endl;//Домножили целую часть на делитель
+		Fileoutput << "\tmovl %eax, %ebx" << endl;
+
+		//Fileoutput << "\tmovl %ecx, %eax" << endl;
+
+		Fileoutput << "\tmovl Temp, %eax" << endl;
+		Fileoutput << "\tsubl %ebx, %eax" << endl << endl;
 	}
 	//результат остался в аккуме
 }
@@ -465,9 +604,13 @@ void GenerationCod::UnaryOperations(unique_ptr<AST> const &NodeOper, ofstream &F
 	if (NodeNameOne == "ASTIdentifier")
 	{
 		if (OperationName == "++")
+		{
 			Fileoutput << "\tincl " << OperandIdL << endl;
+		}
 		else if (OperationName == "--")
+		{
 			Fileoutput << "\tdecl " << OperandIdL << endl;
+		}
 	}
 	else 
 	{
@@ -480,9 +623,13 @@ void GenerationCod::UnaryOperations(unique_ptr<AST> const &NodeOper, ofstream &F
 			Fileoutput << "\tmovl " << OperandIdL << "+" << ArrayIndexNumber * 4 << ", %eax" << endl;
 
 			if (OperationName == "++")
+			{
 				Fileoutput << "\tdecl %eax" << endl;
+			}
 			else if (OperationName == "--")
+			{
 				Fileoutput << "\tincl %eax" << endl;
+			}
 
 			Fileoutput << "\tmovl %eax, " << OperandIdL << "+" << ArrayIndexNumber * 4 << endl;
 		}
@@ -492,9 +639,13 @@ void GenerationCod::UnaryOperations(unique_ptr<AST> const &NodeOper, ofstream &F
 			Fileoutput << "\tmovl " << OperandIdL << "(, %ecx, 4), %eax" << endl;
 
 			if (OperationName == "++")
+			{
 				Fileoutput << "\tdecl %eax" << endl;
+			}
 			else if (OperationName == "--")
+			{
 				Fileoutput << "\tincl %eax" << endl;
+			}
 
 			Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
 			Fileoutput << "\tmovl %eax, " << OperandIdL << "(, %ecx, 4)" << endl;
@@ -509,6 +660,8 @@ void GenerationCod::Scanf(string NodeNameOne, unique_ptr<AST> const &NodeOper, o
 	if (NodeNameOne == "ASTIdentifier")
 	{
 		Fileoutput << "\tpushl $" << OperandIdL << endl;
+		Fileoutput << "\tpushl " << "$format_l" << endl;
+		Fileoutput << "\tcall scanf" << endl << endl;
 	}
 	else
 	{
@@ -520,17 +673,22 @@ void GenerationCod::Scanf(string NodeNameOne, unique_ptr<AST> const &NodeOper, o
 			int ArrayIndexNumber = atoi(NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName().c_str());
 			Fileoutput << "\tmovl $" << OperandIdL << "+" << ArrayIndexNumber * 4 << ", %eax" << endl;
 			Fileoutput << "\tpushl %eax" << endl;
+			Fileoutput << "\tpushl " << "$format_l" << endl;
+			Fileoutput << "\tcall scanf" << endl << endl;
 		} 
 		else
 		{
+			Fileoutput << "\tmovl $Temp, %eax" << endl;
+			Fileoutput << "\tpushl %eax" << endl;
+			Fileoutput << "\tpushl " << "$format_l" << endl;
+			Fileoutput << "\tcall scanf" << endl;
+			Fileoutput << "\tmovl Temp, %eax" << endl;
 			Fileoutput << "\tmovl " << NodeOper->GetExpressionL()->GetIndex()[0]->GetStrName() << ", %ecx" << endl;
-			Fileoutput << "\tmovl " << OperandIdL << "(, %ecx, 4), %eax" << endl;
-			Fileoutput << "\tpushl %eax" << endl;	
+			Fileoutput << "\tmovl %eax, " << OperandIdL << "(, %ecx, 4)" << endl << endl;	
 		}
 	}
 
-	Fileoutput << "\tpushl " << "$format_l" << endl;
-	Fileoutput << "\tcall scanf" << endl;
+	
 }
 
 void GenerationCod::ArithmeticGeneration(unique_ptr<AST> const &NodeOper, ofstream &Fileoutput)
